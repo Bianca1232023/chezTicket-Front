@@ -1,7 +1,9 @@
 export type EventTicketDraft = {
   name: string
   price: string
+  serviceFee: string
   quantity: string
+  purchaseLimit: string
   salesStart: string
   salesEnd: string
 }
@@ -13,7 +15,8 @@ export type EventDraft = {
   description: string
   startDate: string
   startTime: string
-  duration: string
+  endDate: string
+  endTime: string
   address: string
   coverFile: File | null
   coverPreviewUrl: string

@@ -3,19 +3,25 @@ import './EventFormActions.scss'
 
 type EventFormActionsProps = {
   showBack?: boolean
+  showDraft?: boolean
   onBack?: () => void
+  onSaveDraft?: () => void
   onNext?: () => void
   nextLabel: string
   nextHref?: string
+  isSubmitting?: boolean
   className?: string
 }
 
 function EventFormActions({
   showBack = true,
+  showDraft = false,
   onBack,
+  onSaveDraft,
   onNext,
   nextLabel,
   nextHref,
+  isSubmitting = false,
   className,
 }: EventFormActionsProps) {
   const classes = ['event-actions', className].filter(Boolean).join(' ')
@@ -32,12 +38,16 @@ function EventFormActions({
             Voltar
           </Button>
         )}
-        <Button
-          variant="outline"
-          className="event-actions__button event-actions__button--draft"
-        >
-          Salvar Rascunho
-        </Button>
+        {showDraft && (
+          <Button
+            variant="outline"
+            className="event-actions__button event-actions__button--draft"
+            onClick={onSaveDraft}
+            disabled={isSubmitting}
+          >
+            Salvar Rascunho
+          </Button>
+        )}
       </div>
       {nextHref ? (
         <a
@@ -50,8 +60,9 @@ function EventFormActions({
         <Button
           className="event-actions__button event-actions__button--next"
           onClick={onNext}
+          disabled={isSubmitting}
         >
-          {nextLabel}
+          {isSubmitting ? 'Salvando...' : nextLabel}
         </Button>
       )}
     </div>

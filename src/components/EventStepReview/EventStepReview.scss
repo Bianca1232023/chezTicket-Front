@@ -251,6 +251,21 @@
   margin-top: 36px;
 }
 
+.event-step-review__submit-message,
+.event-step-review__submit-error {
+  margin: 20px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.event-step-review__submit-message {
+  color: tokens.$feedback-success;
+}
+
+.event-step-review__submit-error {
+  color: tokens.$feedback-danger;
+}
+
 @media (max-width: 760px) {
   .event-step-review {
     grid-template-columns: minmax(0, 1fr);

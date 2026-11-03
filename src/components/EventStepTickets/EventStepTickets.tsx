@@ -116,6 +116,36 @@ function EventStepTickets({
               />
             </EventField>
             <EventField
+              label="Taxa de serviço"
+              htmlFor="padrao-taxa"
+              variant="muted"
+            >
+              <EventInput
+                id="padrao-taxa"
+                type="text"
+                inputMode="decimal"
+                value={standardTicket.serviceFee}
+                onChange={(event) =>
+                  onTicketChange(0, { serviceFee: event.target.value })
+                }
+              />
+            </EventField>
+            <EventField
+              label="Limite por compra"
+              htmlFor="padrao-limite"
+              variant="muted"
+            >
+              <EventInput
+                id="padrao-limite"
+                type="number"
+                min={1}
+                value={standardTicket.purchaseLimit}
+                onChange={(event) =>
+                  onTicketChange(0, { purchaseLimit: event.target.value })
+                }
+              />
+            </EventField>
+            <EventField
               label="Início das vendas"
               htmlFor="padrao-inicio"
               variant="muted"
@@ -169,6 +199,36 @@ function EventStepTickets({
               />
             </EventField>
             <EventField
+              label="Taxa de serviço"
+              htmlFor="meia-taxa"
+              variant="muted"
+            >
+              <EventInput
+                id="meia-taxa"
+                type="text"
+                inputMode="decimal"
+                value={halfTicket.serviceFee}
+                onChange={(event) =>
+                  onTicketChange(1, { serviceFee: event.target.value })
+                }
+              />
+            </EventField>
+            <EventField
+              label="Limite por compra"
+              htmlFor="meia-limite"
+              variant="muted"
+            >
+              <EventInput
+                id="meia-limite"
+                type="number"
+                min={1}
+                value={halfTicket.purchaseLimit}
+                onChange={(event) =>
+                  onTicketChange(1, { purchaseLimit: event.target.value })
+                }
+              />
+            </EventField>
+            <EventField
               label="Início das vendas"
               htmlFor="meia-inicio"
               variant="muted"
@@ -208,6 +268,36 @@ function EventStepTickets({
                 value={freeTicket.quantity}
                 onChange={(event) =>
                   onTicketChange(2, { quantity: event.target.value })
+                }
+              />
+            </EventField>
+            <EventField
+              label="Taxa de serviço"
+              htmlFor="gratuito-taxa"
+              variant="muted"
+            >
+              <EventInput
+                id="gratuito-taxa"
+                type="text"
+                inputMode="decimal"
+                value={freeTicket.serviceFee}
+                onChange={(event) =>
+                  onTicketChange(2, { serviceFee: event.target.value })
+                }
+              />
+            </EventField>
+            <EventField
+              label="Limite por compra"
+              htmlFor="gratuito-limite"
+              variant="muted"
+            >
+              <EventInput
+                id="gratuito-limite"
+                type="number"
+                min={1}
+                value={freeTicket.purchaseLimit}
+                onChange={(event) =>
+                  onTicketChange(2, { purchaseLimit: event.target.value })
                 }
               />
             </EventField>

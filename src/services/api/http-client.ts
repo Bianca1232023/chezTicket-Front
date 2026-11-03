@@ -1,6 +1,9 @@
 type RequestOptions = {
   query?: Record<string, string | number | boolean | undefined>
   signal?: AbortSignal
+  method?: string
+  body?: BodyInit
+  contentType?: string
 }
 
 export class ApiError extends Error {
@@ -45,7 +48,12 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   let response: Response
   try {
     response = await fetch(url, {
-      headers: { Accept: 'application/json' },
+      method: options.method,
+      headers: {
+        Accept: 'application/json',
+        ...(options.contentType ? { 'Content-Type': options.contentType } : {}),
+      },
+      body: options.body,
       signal: options.signal,
     })
   } catch (error) {
@@ -85,3 +93,19 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 }
 
 export const apiGet = <T>(path: string, options?: RequestOptions) => request<T>(path, options)
+
+export const apiPost = <T>(path: string, body: unknown) =>
+  request<T>(path, {
+    method: 'POST',
+    body: JSON.stringify(body),
+    contentType: 'application/json',
+  })
+
+export const apiPostEmpty = <T>(path: string) =>
+  request<T>(path, { method: 'POST' })
+
+export const apiPostMultipart = <T>(path: string, body: FormData) =>
+  request<T>(path, {
+    method: 'POST',
+    body,
+  })

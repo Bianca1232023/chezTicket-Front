@@ -20,8 +20,8 @@ type EventStepInfoProps = {
 }
 
 function EventStepInfo({ draft, onChange, onNext }: EventStepInfoProps) {
-  const [mapAddress, setMapAddress] = useState('')
   const categoriesQuery = useCategories()
+  const [mapAddress, setMapAddress] = useState('')
 
   useEffect(() => {
     const timer = window.setTimeout(() => setMapAddress(draft.address.trim()), 600)
@@ -139,14 +139,33 @@ function EventStepInfo({ draft, onChange, onNext }: EventStepInfoProps) {
                 onChange={(event) => onChange({ startTime: event.target.value })}
               />
             </EventField>
-            <EventField label="Duração" htmlFor="evento-duracao" variant="muted">
+            <EventField
+              label="Término"
+              htmlFor="evento-termino"
+              variant="muted"
+              className="event-step-info__date"
+            >
               <EventInput
-                id="evento-duracao"
-                type="text"
-                placeholder="3 Horas"
-                maxLength={8}
-                value={draft.duration}
-                onChange={(event) => onChange({ duration: event.target.value })}
+                id="evento-termino"
+                type="date"
+                icon="calendar"
+                required
+                value={draft.endDate}
+                onChange={(event) => onChange({ endDate: event.target.value })}
+              />
+            </EventField>
+            <EventField
+              label="Horário do término"
+              htmlFor="evento-horario-termino"
+              variant="muted"
+            >
+              <EventInput
+                id="evento-horario-termino"
+                type="time"
+                step={60}
+                required
+                value={draft.endTime}
+                onChange={(event) => onChange({ endTime: event.target.value })}
               />
             </EventField>
           </div>
@@ -158,7 +177,9 @@ function EventStepInfo({ draft, onChange, onNext }: EventStepInfoProps) {
             type="text"
             icon="pin"
             iconTone="muted"
-            placeholder="Digite o endereço completo"
+            placeholder="Digite o endereço do evento"
+            maxLength={500}
+            required
             value={draft.address}
             onChange={(event) => onChange({ address: event.target.value })}
           />

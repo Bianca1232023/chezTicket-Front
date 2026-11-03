@@ -22,7 +22,9 @@ export function useEventDetails(eventId: string | null) {
       const sessionsWithDetails = await Promise.all(
         sessions.map(async (session): Promise<ApiEventSession> => {
           const [local, tiposIngresso] = await Promise.all([
-            locationService.getById(session.localId, signal),
+            session.localId === null
+              ? Promise.resolve(null)
+              : locationService.getById(session.localId, signal),
             ticketTypeService.listBySession(session.id, signal),
           ])
 

@@ -17,6 +17,13 @@ type EventStepReviewProps = {
   onEditInfo: () => void
   onEditTickets: () => void
   onEditPromotion: () => void
+  onSaveDraft: () => void
+  onPublish: () => void
+  isSubmitting: boolean
+  submitError: string | null
+  submitMessage: string | null
+  savedEventId: number | null
+  isPublished: boolean
 }
 
 const channels = [
@@ -68,6 +75,13 @@ function EventStepReview({
   onEditInfo,
   onEditTickets,
   onEditPromotion,
+  onSaveDraft,
+  onPublish,
+  isSubmitting,
+  submitError,
+  submitMessage,
+  savedEventId,
+  isPublished,
 }: EventStepReviewProps) {
   const ticketRows = draft.tickets.map((ticket) => ({
     type: ticket.name,
@@ -113,7 +127,11 @@ function EventStepReview({
               <li>
                 <Icon name="clock" />
                 {draft.startTime || 'Horário não informado'}
-                {draft.duration && ` (${draft.duration})`}
+              </li>
+              <li>
+                <Icon name="calendar" />
+                Término: {formatDate(draft.endDate)}
+                {draft.endTime && ` às ${draft.endTime}`}
               </li>
               <li>
                 <Icon name="pin" />
@@ -124,7 +142,11 @@ function EventStepReview({
 
           <EventPanel
             title="Descrição o evento"
-            actions={<EventEditButton onClick={onEditInfo} />}
+            actions={
+              savedEventId === null ? (
+                <EventEditButton onClick={onEditInfo} />
+              ) : undefined
+            }
             className="event-step-review__description"
           >
             <p className="event-step-review__body">
@@ -134,7 +156,11 @@ function EventStepReview({
 
           <EventPanel
             title="Local"
-            actions={<EventEditButton onClick={onEditInfo} />}
+            actions={
+              savedEventId === null ? (
+                <EventEditButton onClick={onEditInfo} />
+              ) : undefined
+            }
             className="event-step-review__place"
           >
             <div className="event-step-review__address">
@@ -154,7 +180,11 @@ function EventStepReview({
           <EventPanel
             title="Ingressos"
             variant="raised"
-            actions={<EventEditButton onClick={onEditTickets} />}
+            actions={
+              savedEventId === null ? (
+                <EventEditButton onClick={onEditTickets} />
+              ) : undefined
+            }
             className="event-step-review__tickets"
           >
             <EventTicketTable rows={ticketRows} />
@@ -162,7 +192,11 @@ function EventStepReview({
 
           <EventPanel
             title="Divulgação"
-            actions={<EventEditButton onClick={onEditPromotion} />}
+            actions={
+              savedEventId === null ? (
+                <EventEditButton onClick={onEditPromotion} />
+              ) : undefined
+            }
             className="event-step-review__promotion"
           >
             {draft.promotionPreviewUrl && (
@@ -214,10 +248,32 @@ function EventStepReview({
         </div>
       </div>
 
+      {submitMessage && (
+        <p className="event-step-review__submit-message" role="status">
+          {submitMessage}
+        </p>
+      )}
+      {submitError && (
+        <p className="event-step-review__submit-error" role="alert">
+          {submitError}
+        </p>
+      )}
+
       <EventFormActions
-        nextLabel="Publicar"
-        nextHref={routeHref('evento')}
+        showBack={savedEventId === null}
+        showDraft={savedEventId === null && !isPublished}
         onBack={onBack}
+        onSaveDraft={onSaveDraft}
+        onNext={onPublish}
+        isSubmitting={isSubmitting}
+        nextLabel={
+          isPublished ? 'Ver evento' : 'Publicar'
+        }
+        nextHref={
+          isPublished && savedEventId !== null
+            ? routeHref('evento', { id: savedEventId })
+            : undefined
+        }
         className="event-step-review__actions"
       />
     </>

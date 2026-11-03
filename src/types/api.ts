@@ -20,6 +20,9 @@ export type ApiEvent = ApiEventSummary & {
   classificacaoEtaria: string
   classificacaoEtariaDescricao: string
   imagemCapa: string | null
+  imagemDivulgacao: string | null
+  tags: string[]
+  redesSociais: Record<string, string>
   politicaReembolso: string
   politicaReembolsoDescricao: string
   criadoEm: string
@@ -29,7 +32,8 @@ export type ApiEvent = ApiEventSummary & {
 export type ApiSession = {
   id: number
   eventoId: number
-  localId: number
+  localId: number | null
+  endereco: string | null
   inicio: string
   fim: string
   status: string
@@ -56,9 +60,42 @@ export type ApiTicketType = {
   quantidadeVendida: number
   quantidadeDisponivel: number
   limitePorCompra: number
+  inicioVendas: string | null
+  fimVendas: string | null
 }
 
 export type ApiEventSession = ApiSession & {
-  local: ApiLocation
+  local: ApiLocation | null
   tiposIngresso: ApiTicketType[]
+}
+
+export type CreateCompleteEventRequest = {
+  organizadorId: number
+  categoriaId: number
+  titulo: string
+  descricao: string
+  classificacaoEtaria: string
+  politicaReembolso: string
+  endereco: string
+  inicio: string
+  fim: string
+  tags: string[]
+  redesSociais: Record<string, string>
+  ingressos: Array<{
+    nome: string
+    gratuito: boolean
+    preco: number
+    taxaServico: number
+    quantidadeTotal: number
+    limitePorCompra: number
+    inicioVendas: string | null
+    fimVendas: string | null
+  }>
+  publicar: boolean
+}
+
+export type ApiCreatedEvent = {
+  evento: ApiEvent
+  sessao: ApiSession
+  ingressos: ApiTicketType[]
 }

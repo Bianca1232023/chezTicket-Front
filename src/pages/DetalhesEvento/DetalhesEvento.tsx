@@ -137,8 +137,12 @@ function DetalhesEvento() {
               {selectedSession ? (
                 <InfoCard
                   icon="pin"
-                  title={selectedSession.local.nome}
-                  description={`${selectedSession.local.endereco} — ${selectedSession.local.cidade}, ${selectedSession.local.uf}`}
+                  title={selectedSession.local?.nome ?? 'Local do evento'}
+                  description={
+                    selectedSession.local
+                      ? `${selectedSession.local.endereco} — ${selectedSession.local.cidade}, ${selectedSession.local.uf}`
+                      : selectedSession.endereco ?? 'Endereço não informado'
+                  }
                 />
               ) : (
                 <p className="detalhes-evento__text">O local será informado quando houver uma sessão agendada.</p>
