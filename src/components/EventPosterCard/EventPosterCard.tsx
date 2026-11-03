@@ -3,11 +3,11 @@ import Icon from '../Icon/Icon'
 import './EventPosterCard.scss'
 
 type EventPosterCardProps = {
-  image: string
+  image?: string
   tag: string
   title: string
-  meta: string
-  price: string
+  meta?: string
+  price?: string
   href: string
   imagePosition?: string
 }
@@ -25,12 +25,14 @@ function EventPosterCard({
 
   return (
     <article className="poster-card">
-      <img
-        className="poster-card__image"
-        src={image}
-        alt=""
-        style={imagePosition ? { objectPosition: imagePosition } : undefined}
-      />
+      {image && (
+        <img
+          className="poster-card__image"
+          src={image}
+          alt=""
+          style={imagePosition ? { objectPosition: imagePosition } : undefined}
+        />
+      )}
       <span className="poster-card__tag">{tag}</span>
       <button
         className={`poster-card__favorite${favorite ? ' is-active' : ''}`}
@@ -45,8 +47,8 @@ function EventPosterCard({
         <h3 className="poster-card__title">
           <a href={href}>{title}</a>
         </h3>
-        <p className="poster-card__meta">{meta}</p>
-        <p className="poster-card__price">{price}</p>
+        {meta && <p className="poster-card__meta">{meta}</p>}
+        {price && <p className="poster-card__price">{price}</p>}
       </div>
     </article>
   )

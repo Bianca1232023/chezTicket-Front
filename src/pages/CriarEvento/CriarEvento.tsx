@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Header from '../../components/Header/Header'
 import EventStepper from '../../components/EventStepper/EventStepper'
 import EventStepInfo from '../../components/EventStepInfo/EventStepInfo'
 import EventStepTickets from '../../components/EventStepTickets/EventStepTickets'
 import EventStepPromotion from '../../components/EventStepPromotion/EventStepPromotion'
 import EventStepReview from '../../components/EventStepReview/EventStepReview'
+import type { EventDraft } from '../../types/event-draft'
+import coverImage from '../../assets/criar-evento/capa-evento-formulario.png'
 import '../../styles/pages/criar-evento.scss'
 
 const steps = ['Informações', 'Ingressos', 'Divulgações', 'Revisão']
@@ -28,9 +30,79 @@ const headings = [
   },
 ]
 
+const createInitialDraft = (): EventDraft => ({
+  name: '',
+  categoryId: '',
+  categoryName: '',
+  description: '',
+  startDate: '',
+  startTime: '',
+  duration: '',
+  address: '',
+  coverFile: null,
+  coverPreviewUrl: coverImage,
+  tags: ['Evento', 'ao vivo', 'Tecnologia'],
+  tickets: [
+    {
+      name: 'Ingresso Padrão',
+      price: 'R$ 50,00',
+      quantity: '500',
+      salesStart: '',
+      salesEnd: '',
+    },
+    {
+      name: 'Meia-entrada',
+      price: 'R$ 25,00',
+      quantity: '100',
+      salesStart: '',
+      salesEnd: '',
+    },
+    {
+      name: 'Gratuito',
+      price: 'Gratuito',
+      quantity: '20',
+      salesStart: '',
+      salesEnd: '',
+    },
+  ],
+  socialLinks: {
+    instagram: '',
+    facebook: '',
+    x: '',
+    linkedin: '',
+  },
+  promotionFile: null,
+  promotionPreviewUrl: '',
+})
+
 function CriarEvento() {
   const [step, setStep] = useState(() => Number(new URLSearchParams(location.search).get('step') ?? 0)) // TEMP
+  const [draft, setDraft] = useState(createInitialDraft)
   const { title, subtitle } = headings[step]
+
+  useEffect(() => {
+    const previewUrls = [draft.coverPreviewUrl, draft.promotionPreviewUrl].filter(
+      (url) => url.startsWith('blob:'),
+    )
+
+    return () => previewUrls.forEach((url) => URL.revokeObjectURL(url))
+  }, [draft.coverPreviewUrl, draft.promotionPreviewUrl])
+
+  const updateDraft = (updates: Partial<EventDraft>) => {
+    setDraft((current) => ({ ...current, ...updates }))
+  }
+
+  const updateTicket = (
+    index: number,
+    updates: Partial<EventDraft['tickets'][number]>,
+  ) => {
+    setDraft((current) => ({
+      ...current,
+      tickets: current.tickets.map((ticket, ticketIndex) =>
+        ticketIndex === index ? { ...ticket, ...updates } : ticket,
+      ),
+    }))
+  }
 
   const goTo = (target: number) => {
     setStep(Math.min(Math.max(target, 0), steps.length - 1))
@@ -53,10 +125,34 @@ function CriarEvento() {
           />
 
           <div className="criar-evento__content">
-            {step === 0 && <EventStepInfo onNext={next} />}
-            {step === 1 && <EventStepTickets onBack={back} onNext={next} />}
-            {step === 2 && <EventStepPromotion onBack={back} onNext={next} />}
-            {step === 3 && <EventStepReview onBack={back} />}
+            <div hidden={step !== 0}>
+              <EventStepInfo draft={draft} onChange={updateDraft} onNext={next} />
+            </div>
+            <div hidden={step !== 1}>
+              <EventStepTickets
+                tickets={draft.tickets}
+                onTicketChange={updateTicket}
+                onBack={back}
+                onNext={next}
+              />
+            </div>
+            <div hidden={step !== 2}>
+              <EventStepPromotion
+                draft={draft}
+                onChange={updateDraft}
+                onBack={back}
+                onNext={next}
+              />
+            </div>
+            <div hidden={step !== 3}>
+              <EventStepReview
+                draft={draft}
+                onBack={back}
+                onEditInfo={() => goTo(0)}
+                onEditTickets={() => goTo(1)}
+                onEditPromotion={() => goTo(2)}
+              />
+            </div>
           </div>
         </div>
       </main>

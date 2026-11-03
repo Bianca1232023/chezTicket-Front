@@ -4,9 +4,15 @@ import EventInput from '../EventInput/EventInput'
 import EventTicketCard from '../EventTicketCard/EventTicketCard'
 import EventFormActions from '../EventFormActions/EventFormActions'
 import Icon from '../Icon/Icon'
+import type { EventTicketDraft } from '../../types/event-draft'
 import './EventStepTickets.scss'
 
 type EventStepTicketsProps = {
+  tickets: EventTicketDraft[]
+  onTicketChange: (
+    index: number,
+    updates: Partial<EventTicketDraft>,
+  ) => void
   onBack: () => void
   onNext: () => void
 }
@@ -47,19 +53,35 @@ function GiftIcon() {
   )
 }
 
-function DateInput({ id }: { id: string }) {
+function DateInput({
+  id,
+  value,
+  onChange,
+}: {
+  id: string
+  value: string
+  onChange: (value: string) => void
+}) {
   return (
     <EventInput
       id={id}
-      type="text"
+      type="date"
       icon="calendar"
-      placeholder="DD/MM/AAAA"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
       wrapperClassName="event-step-tickets__date"
     />
   )
 }
 
-function EventStepTickets({ onBack, onNext }: EventStepTicketsProps) {
+function EventStepTickets({
+  tickets,
+  onTicketChange,
+  onBack,
+  onNext,
+}: EventStepTicketsProps) {
+  const [standardTicket, halfTicket, freeTicket] = tickets
+
   return (
     <>
       <EventPanel title="Tipo do ingresso" className="event-step-tickets">
@@ -70,28 +92,50 @@ function EventStepTickets({ onBack, onNext }: EventStepTicketsProps) {
             description="Acesso ao evento"
           >
             <EventField label="Preço" htmlFor="padrao-preco" variant="muted">
-              <EventInput id="padrao-preco" type="text" defaultValue="R$ 50,00" />
+              <EventInput
+                id="padrao-preco"
+                type="text"
+                value={standardTicket.price}
+                onChange={(event) =>
+                  onTicketChange(0, { price: event.target.value })
+                }
+              />
             </EventField>
             <EventField
               label="Quantidade disponível"
               htmlFor="padrao-quantidade"
               variant="muted"
             >
-              <EventInput id="padrao-quantidade" type="text" defaultValue="500" />
+              <EventInput
+                id="padrao-quantidade"
+                type="text"
+                value={standardTicket.quantity}
+                onChange={(event) =>
+                  onTicketChange(0, { quantity: event.target.value })
+                }
+              />
             </EventField>
             <EventField
               label="Início das vendas"
               htmlFor="padrao-inicio"
               variant="muted"
             >
-              <DateInput id="padrao-inicio" />
+              <DateInput
+                id="padrao-inicio"
+                value={standardTicket.salesStart}
+                onChange={(value) => onTicketChange(0, { salesStart: value })}
+              />
             </EventField>
             <EventField
               label="Encerramento das Vendas"
               htmlFor="padrao-fim"
               variant="muted"
             >
-              <DateInput id="padrao-fim" />
+              <DateInput
+                id="padrao-fim"
+                value={standardTicket.salesEnd}
+                onChange={(value) => onTicketChange(0, { salesEnd: value })}
+              />
             </EventField>
           </EventTicketCard>
 
@@ -101,28 +145,50 @@ function EventStepTickets({ onBack, onNext }: EventStepTicketsProps) {
             description="Acesso ao evento"
           >
             <EventField label="Preço" htmlFor="meia-preco" variant="muted">
-              <EventInput id="meia-preco" type="text" defaultValue="R$ 25,00" />
+              <EventInput
+                id="meia-preco"
+                type="text"
+                value={halfTicket.price}
+                onChange={(event) =>
+                  onTicketChange(1, { price: event.target.value })
+                }
+              />
             </EventField>
             <EventField
               label="Quantidade disponível"
               htmlFor="meia-quantidade"
               variant="muted"
             >
-              <EventInput id="meia-quantidade" type="text" defaultValue="100" />
+              <EventInput
+                id="meia-quantidade"
+                type="text"
+                value={halfTicket.quantity}
+                onChange={(event) =>
+                  onTicketChange(1, { quantity: event.target.value })
+                }
+              />
             </EventField>
             <EventField
               label="Início das vendas"
               htmlFor="meia-inicio"
               variant="muted"
             >
-              <DateInput id="meia-inicio" />
+              <DateInput
+                id="meia-inicio"
+                value={halfTicket.salesStart}
+                onChange={(value) => onTicketChange(1, { salesStart: value })}
+              />
             </EventField>
             <EventField
               label="Encerramento das Vendas"
               htmlFor="meia-fim"
               variant="muted"
             >
-              <DateInput id="meia-fim" />
+              <DateInput
+                id="meia-fim"
+                value={halfTicket.salesEnd}
+                onChange={(value) => onTicketChange(1, { salesEnd: value })}
+              />
             </EventField>
           </EventTicketCard>
 
@@ -136,21 +202,36 @@ function EventStepTickets({ onBack, onNext }: EventStepTicketsProps) {
               htmlFor="gratuito-quantidade"
               variant="muted"
             >
-              <EventInput id="gratuito-quantidade" type="text" defaultValue="20" />
+              <EventInput
+                id="gratuito-quantidade"
+                type="text"
+                value={freeTicket.quantity}
+                onChange={(event) =>
+                  onTicketChange(2, { quantity: event.target.value })
+                }
+              />
             </EventField>
             <EventField
               label="Início das vendas"
               htmlFor="gratuito-inicio"
               variant="muted"
             >
-              <DateInput id="gratuito-inicio" />
+              <DateInput
+                id="gratuito-inicio"
+                value={freeTicket.salesStart}
+                onChange={(value) => onTicketChange(2, { salesStart: value })}
+              />
             </EventField>
             <EventField
               label="Encerramento das Vendas"
               htmlFor="gratuito-fim"
               variant="muted"
             >
-              <DateInput id="gratuito-fim" />
+              <DateInput
+                id="gratuito-fim"
+                value={freeTicket.salesEnd}
+                onChange={(value) => onTicketChange(2, { salesEnd: value })}
+              />
             </EventField>
           </EventTicketCard>
         </div>

@@ -6,6 +6,13 @@
   background: tokens.$surface-page;
 }
 
+.detalhes-evento__message {
+  width: min(1120px, 100% - 40px);
+  margin: 32px auto;
+  color: tokens.$color-secondary;
+  line-height: 1.5;
+}
+
 .detalhes-evento__container {
   display: grid;
   width: min(1280px, 100% - 160px);

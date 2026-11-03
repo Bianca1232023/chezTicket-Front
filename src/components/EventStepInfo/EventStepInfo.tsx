@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import EventPanel from '../EventPanel/EventPanel'
 import EventField from '../EventField/EventField'
 import EventInput from '../EventInput/EventInput'
@@ -9,18 +9,32 @@ import EventUploadDropzone from '../EventUploadDropzone/EventUploadDropzone'
 import EventCoverPreview from '../EventCoverPreview/EventCoverPreview'
 import EventTagInput from '../EventTagInput/EventTagInput'
 import EventFormActions from '../EventFormActions/EventFormActions'
-import coverImage from '../../assets/criar-evento/capa-evento-formulario.png'
+import type { EventDraft } from '../../types/event-draft'
+import { useCategories } from '../../hooks/useCategories'
 import './EventStepInfo.scss'
 
 type EventStepInfoProps = {
+  draft: EventDraft
+  onChange: (updates: Partial<EventDraft>) => void
   onNext: () => void
 }
 
-function EventStepInfo({ onNext }: EventStepInfoProps) {
-  const [cover, setCover] = useState(coverImage)
+function EventStepInfo({ draft, onChange, onNext }: EventStepInfoProps) {
+  const [mapAddress, setMapAddress] = useState('')
+  const categoriesQuery = useCategories()
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setMapAddress(draft.address.trim()), 600)
+    return () => window.clearTimeout(timer)
+  }, [draft.address])
 
   const handleFile = (file?: File) => {
-    if (file) setCover(URL.createObjectURL(file))
+    if (file) {
+      onChange({
+        coverFile: file,
+        coverPreviewUrl: URL.createObjectURL(file),
+      })
+    }
   }
 
   return (
@@ -31,21 +45,70 @@ function EventStepInfo({ onNext }: EventStepInfoProps) {
             id="evento-nome"
             type="text"
             placeholder="Digite o nome do seu evento"
+            value={draft.name}
+            onChange={(event) => onChange({ name: event.target.value })}
           />
         </EventField>
 
         <EventField label="Categoria" htmlFor="evento-categoria">
-          <EventSelect id="evento-categoria" defaultValue="" required>
+          <EventSelect
+            id="evento-categoria"
+            value={draft.categoryId}
+            onChange={(event) => {
+              const selectedOption = event.currentTarget.selectedOptions[0]
+              onChange({
+                categoryId: selectedOption.value,
+                categoryName: selectedOption.value ? selectedOption.text : '',
+              })
+            }}
+            required
+            disabled={
+              categoriesQuery.isLoading ||
+              categoriesQuery.isError ||
+              !categoriesQuery.data?.length
+            }
+            aria-describedby="evento-categoria-status"
+          >
             <option value="" disabled>
-              Selecione uma categoria
+              {categoriesQuery.isLoading
+                ? 'Carregando categorias...'
+                : categoriesQuery.isError
+                  ? 'Não foi possível carregar as categorias'
+                  : categoriesQuery.data?.length
+                    ? 'Selecione uma categoria'
+                    : 'Nenhuma categoria ativa disponível'}
             </option>
+            {categoriesQuery.data?.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.nome}
+              </option>
+            ))}
           </EventSelect>
+          <p
+            id="evento-categoria-status"
+            className="event-step-info__category-status"
+            role={categoriesQuery.isError ? 'alert' : 'status'}
+            hidden={!categoriesQuery.isError && categoriesQuery.data?.length !== 0}
+          >
+            {categoriesQuery.isError ? (
+              <>
+                {categoriesQuery.error?.message}{' '}
+                <button type="button" onClick={categoriesQuery.refetch}>
+                  Tentar novamente
+                </button>
+              </>
+            ) : (
+              'Cadastre uma categoria antes de criar um evento.'
+            )}
+          </p>
         </EventField>
 
         <EventField label="Descrição" htmlFor="evento-descricao">
           <EventTextarea
             id="evento-descricao"
             placeholder="Conte um pouco sobre o evento, atrações e o que os participantes podem esperar..."
+            value={draft.description}
+            onChange={(event) => onChange({ description: event.target.value })}
           />
         </EventField>
 
@@ -59,16 +122,32 @@ function EventStepInfo({ onNext }: EventStepInfoProps) {
             >
               <EventInput
                 id="evento-inicio"
-                type="text"
+                type="date"
                 icon="calendar"
-                placeholder="DD/MM/AAAA"
+                required
+                value={draft.startDate}
+                onChange={(event) => onChange({ startDate: event.target.value })}
               />
             </EventField>
             <EventField label="Horário" htmlFor="evento-horario" variant="muted">
-              <EventInput id="evento-horario" type="text" placeholder="21:00" />
+              <EventInput
+                id="evento-horario"
+                type="time"
+                step={60}
+                required
+                value={draft.startTime}
+                onChange={(event) => onChange({ startTime: event.target.value })}
+              />
             </EventField>
             <EventField label="Duração" htmlFor="evento-duracao" variant="muted">
-              <EventInput id="evento-duracao" type="text" placeholder="3 Horas" />
+              <EventInput
+                id="evento-duracao"
+                type="text"
+                placeholder="3 Horas"
+                maxLength={8}
+                value={draft.duration}
+                onChange={(event) => onChange({ duration: event.target.value })}
+              />
             </EventField>
           </div>
         </EventField>
@@ -80,10 +159,13 @@ function EventStepInfo({ onNext }: EventStepInfoProps) {
             icon="pin"
             iconTone="muted"
             placeholder="Digite o endereço completo"
+            value={draft.address}
+            onChange={(event) => onChange({ address: event.target.value })}
           />
         </EventField>
         <EventMapPreview
           label="Pré-visualização do mapa"
+          address={mapAddress}
           className="event-step-info__map"
         />
 
@@ -96,7 +178,7 @@ function EventStepInfo({ onNext }: EventStepInfoProps) {
               onFileChange={handleFile}
             />
             <EventCoverPreview
-              src={cover}
+              src={draft.coverPreviewUrl}
               alt="Imagem de capa do evento"
               label="Imagem de Capa"
               editLabel="Editar Imagem"
@@ -107,7 +189,8 @@ function EventStepInfo({ onNext }: EventStepInfoProps) {
         <EventField label="Tags" htmlFor="evento-tags">
           <EventTagInput
             id="evento-tags"
-            initialTags={['Evento', 'ao vivo', 'Tecnologia']}
+            tags={draft.tags}
+            onTagsChange={(tags) => onChange({ tags })}
           />
         </EventField>
       </div>

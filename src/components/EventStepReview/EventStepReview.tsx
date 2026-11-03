@@ -7,21 +7,24 @@ import EventInput from '../EventInput/EventInput'
 import EventChecklist from '../EventChecklist/EventChecklist'
 import EventFormActions from '../EventFormActions/EventFormActions'
 import Icon from '../Icon/Icon'
+import type { EventDraft } from '../../types/event-draft'
 import { routeHref } from '../../hooks/useRoute'
-import coverImage from '../../assets/criar-evento/capa-evento.png'
 import './EventStepReview.scss'
 
 type EventStepReviewProps = {
+  draft: EventDraft
   onBack: () => void
+  onEditInfo: () => void
+  onEditTickets: () => void
+  onEditPromotion: () => void
 }
 
-const ticketRows = [
-  { type: 'Ingressos', price: 'R$ 50,00', available: '500' },
-  { type: 'Meia-entrada', price: 'R$ 100,00', available: '100' },
-  { type: 'Gratuito', price: 'R$ 25,00', available: 'Grátis' },
-]
-
-const channels = ['instagram', 'facebook', 'x', 'linkedin'] as const
+const channels = [
+  { network: 'instagram', label: 'Instagram' },
+  { network: 'facebook', label: 'Facebook' },
+  { network: 'x', label: 'X' },
+  { network: 'linkedin', label: 'LinkedIn' },
+] as const
 
 const checklist = [
   { label: 'Informações do evento' },
@@ -31,56 +34,107 @@ const checklist = [
   { label: 'Divulgação', mobileOnly: true },
 ]
 
-function EventStepReview({ onBack }: EventStepReviewProps) {
+function formatDate(value: string) {
+  if (!value) return 'Não informado'
+
+  const [year, month, day] = value.split('-')
+  return `${day}/${month}/${year}`
+}
+
+function formatSalesPeriod(start: string, end: string) {
+  if (!start && !end) return undefined
+
+  const startDate = start ? formatDate(start) : 'não informado'
+  const endDate = end ? formatDate(end) : 'não informado'
+  return `Vendas: ${startDate} até ${endDate}`
+}
+
+function createEventLink(name: string) {
+  const slug =
+    name
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'nome-do-evento'
+
+  return `chezticket.com/eventos/${slug}`
+}
+
+function EventStepReview({
+  draft,
+  onBack,
+  onEditInfo,
+  onEditTickets,
+  onEditPromotion,
+}: EventStepReviewProps) {
+  const ticketRows = draft.tickets.map((ticket) => ({
+    type: ticket.name,
+    price: ticket.price || 'Não informado',
+    available: ticket.quantity || 'Não informado',
+    salesPeriod: formatSalesPeriod(ticket.salesStart, ticket.salesEnd),
+  }))
+  const registeredChannels = channels.filter(({ network }) =>
+    draft.socialLinks[network].trim(),
+  )
+  const eventLink = createEventLink(draft.name)
+
   return (
     <>
       <div className="event-step-review">
         <div className="event-step-review__column">
           <EventPanel title="Prévia do evento" className="event-step-review__preview">
             <EventCoverPreview
-              src={coverImage}
+              src={draft.coverPreviewUrl}
               alt="Imagem de capa do evento"
               label="Imagem de Capa"
               className="event-step-review__cover"
             />
             <h3 className="event-step-review__name">
-              Workshop de Inteligência Artificial
+              {draft.name || 'Nome do evento não informado'}
             </h3>
-            <p className="event-step-review__lead">
-              Aprenda sobre inteligência artificial, novas tecnologias e as
-              principais tendências do mercado.
+            <p className="event-step-review__category">
+              {draft.categoryName || 'Categoria não selecionada'}
             </p>
+            <p className="event-step-review__lead">
+              {draft.description || 'Descrição não informada'}
+            </p>
+            {draft.tags.length > 0 && (
+              <p className="event-step-review__tags">
+                Tags: {draft.tags.join(', ')}
+              </p>
+            )}
             <ul className="event-step-review__meta">
               <li>
                 <Icon name="calendar" />
-                DD/MM/AAAA
+                {formatDate(draft.startDate)}
               </li>
               <li>
                 <Icon name="clock" />
-                10:00 - 19:00
+                {draft.startTime || 'Horário não informado'}
+                {draft.duration && ` (${draft.duration})`}
               </li>
               <li>
                 <Icon name="pin" />
-                Rio de Janeiro - RJ
+                {draft.address || 'Local não informado'}
               </li>
             </ul>
           </EventPanel>
 
           <EventPanel
             title="Descrição o evento"
-            actions={<EventEditButton />}
+            actions={<EventEditButton onClick={onEditInfo} />}
             className="event-step-review__description"
           >
             <p className="event-step-review__body">
-              Um workshop completo sobre inteligência artificial, com
-              palestras, networking e experiências práticas. Ideal para
-              profissionais, estudantes e entusiastas da tecnologia.
+              {draft.description || 'Descrição não informada'}
             </p>
           </EventPanel>
 
           <EventPanel
             title="Local"
-            actions={<EventEditButton />}
+            actions={<EventEditButton onClick={onEditInfo} />}
             className="event-step-review__place"
           >
             <div className="event-step-review__address">
@@ -88,10 +142,9 @@ function EventStepReview({ onBack }: EventStepReviewProps) {
                 <Icon name="pin" />
               </span>
               <div>
-                <strong>São Paulo - SP</strong>
-                <p className="event-step-review__body">
-                  Av. Paulista, 1000 - Bela Vista, São Paulo - Sp , 01310-100
-                </p>
+                <strong>
+                  {draft.address || 'Local não informado'}
+                </strong>
               </div>
             </div>
           </EventPanel>
@@ -101,7 +154,7 @@ function EventStepReview({ onBack }: EventStepReviewProps) {
           <EventPanel
             title="Ingressos"
             variant="raised"
-            actions={<EventEditButton />}
+            actions={<EventEditButton onClick={onEditTickets} />}
             className="event-step-review__tickets"
           >
             <EventTicketTable rows={ticketRows} />
@@ -109,19 +162,33 @@ function EventStepReview({ onBack }: EventStepReviewProps) {
 
           <EventPanel
             title="Divulgação"
-            actions={<EventEditButton />}
+            actions={<EventEditButton onClick={onEditPromotion} />}
             className="event-step-review__promotion"
           >
+            {draft.promotionPreviewUrl && (
+              <img
+                className="event-step-review__promotion-image"
+                src={draft.promotionPreviewUrl}
+                alt="Imagem de divulgação do evento"
+              />
+            )}
             <p className="event-step-review__channels-label">
               Canais cadastrados
             </p>
             <ul className="event-step-review__channels">
-              {channels.map((network) => (
-                <li key={network}>
-                  <EventSocialIcon network={network} />
-                  https://instagram.com/seu-evento
-                </li>
-              ))}
+              {registeredChannels.length > 0 ? (
+                registeredChannels.map(({ network, label }) => (
+                  <li key={network}>
+                    <EventSocialIcon network={network} />
+                    <span>
+                      <strong>{label}</strong>
+                      {draft.socialLinks[network]}
+                    </span>
+                  </li>
+                ))
+              ) : (
+                <li>Nenhum canal cadastrado.</li>
+              )}
             </ul>
             <h3 className="event-step-review__link-title">Link do evento</h3>
             <div className="event-step-review__copy">
@@ -131,7 +198,7 @@ function EventStepReview({ onBack }: EventStepReviewProps) {
                 addon
                 readOnly
                 aria-label="Link do evento"
-                defaultValue="chezticket.com/eventos/nome-do-evento"
+                value={eventLink}
               />
               <button
                 className="event-step-review__copy-button"

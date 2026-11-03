@@ -6,86 +6,185 @@ import SectionCard from '../../components/SectionCard/SectionCard'
 import DateSelector, { type DateOption } from '../../components/DateSelector/DateSelector'
 import DetailList from '../../components/DetailList/DetailList'
 import LinkButton from '../../components/LinkButton/LinkButton'
-import { routeHref } from '../../hooks/useRoute'
-import heroImage from '../../assets/detalhes-evento/hero-palco.png'
+import { useCategories } from '../../hooks/useCategories'
+import { useEventDetails } from '../../hooks/useEventDetails'
+import { useRouteParam } from '../../hooks/useRoute'
 import '../../styles/pages/detalhes-evento.scss'
 
-const dates: (DateOption & { label: string })[] = [
-  { id: '14', weekday: 'Qui', day: '14', label: 'Quinta, 14 de Nov' },
-  { id: '15', weekday: 'Sex', day: '15', label: 'Sábado, 15 de Nov' },
-  { id: '16', weekday: 'Sáb', day: '16', label: 'Sábado, 16 de Nov' },
-  { id: '17', weekday: 'Dom', day: '17', label: 'Domingo, 17 de Nov' },
-]
+const formatCurrency = (amount: number) =>
+  `R$ ${amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
-const highlights = [
-  { title: 'Inteligência Artificial', description: 'Palestra e experiência com IA' },
-  { title: 'Worksop e Tecnologia', description: 'Experiências práticas e hands-on' },
-  { title: 'Instalações de Neon', description: 'Arte imersiva digital' },
-  { title: 'Game Jam', description: 'Desafio de criação de jogos em equipe' },
-]
+const formatDate = (date: Date, options: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat('pt-BR', options).format(date)
 
 function DetalhesEvento() {
-  const [selectedDate, setSelectedDate] = useState('15')
-  const current = dates.find((date) => date.id === selectedDate) ?? dates[1]
+  const eventId = useRouteParam('id')
+  const { data, isLoading, isError, error, refetch } = useEventDetails(eventId || null)
+  const categoriesQuery = useCategories()
+  const [selectedSessionId, setSelectedSessionId] = useState('')
+
+  if (!eventId || !/^\d+$/.test(eventId)) {
+    return (
+      <>
+        <Header />
+        <main className="detalhes-evento">
+          <p className="detalhes-evento__message" role="alert">
+            Selecione um evento na página de exploração para ver os detalhes.
+          </p>
+        </main>
+      </>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <>
+        <Header />
+        <main className="detalhes-evento">
+          <p className="detalhes-evento__message" role="status">Carregando detalhes do evento...</p>
+        </main>
+      </>
+    )
+  }
+
+  if (isError || !data) {
+    return (
+      <>
+        <Header />
+        <main className="detalhes-evento">
+          <div className="detalhes-evento__message" role="alert">
+            <p>{error?.message ?? 'Não foi possível carregar este evento.'}</p>
+            <button type="button" onClick={refetch}>Tentar novamente</button>
+          </div>
+        </main>
+      </>
+    )
+  }
+
+  const { event, sessions } = data
+  const category = categoriesQuery.data?.find((item) => item.id === event.categoriaId)
+  const availableSessions = sessions.filter((session) => session.status === 'AGENDADA')
+  const selectedSession =
+    availableSessions.find((session) => String(session.id) === selectedSessionId) ??
+    availableSessions[0]
+  const dateOptions: DateOption[] = availableSessions.map((session) => {
+    const start = new Date(session.inicio)
+    return {
+      id: String(session.id),
+      weekday: formatDate(start, { weekday: 'short' }).replace('.', ''),
+      day: formatDate(start, { day: '2-digit' }),
+    }
+  })
+  const availableTickets =
+    selectedSession?.tiposIngresso.filter((ticket) => ticket.quantidadeDisponivel > 0) ?? []
+  const minimumPrice = availableTickets.reduce(
+    (minimum, ticket) => Math.min(minimum, ticket.gratuito ? 0 : ticket.preco),
+    Number.POSITIVE_INFINITY,
+  )
+  const priceLabel = Number.isFinite(minimumPrice)
+    ? minimumPrice === 0
+      ? 'Grátis'
+      : formatCurrency(minimumPrice)
+    : 'Indisponível'
+  const sessionDate = selectedSession ? new Date(selectedSession.inicio) : null
+  const sessionEnd = selectedSession ? new Date(selectedSession.fim) : null
+  const sessionTime =
+    sessionDate && sessionEnd
+      ? `${formatDate(sessionDate, { hour: '2-digit', minute: '2-digit' })} às ${formatDate(sessionEnd, { hour: '2-digit', minute: '2-digit' })}`
+      : 'Não informada'
 
   return (
     <>
       <Header />
       <main className="detalhes-evento">
         <HeroBanner
-          image={heroImage}
-          overline="FESTIVAL MULTIDISCIPLINAR"
-          title="NOVA: Festival de Tecnologia e inovação"
+          image={event.imagemCapa ?? undefined}
+          overline={category?.nome ?? 'Evento'}
+          title={event.titulo}
         />
         <div className="detalhes-evento__container">
           <div className="detalhes-evento__content">
             <section className="detalhes-evento__section">
               <h2 className="detalhes-evento__heading">Sobre o Evento</h2>
               <p className="detalhes-evento__text">
-                O NOVA é um festival dedicado à tecnologia, inovação e criatividade digital.
-                Reunimos profissionais, estudantes, empresas e entusiastas para explorar as
-                principais tendências que estão transformando o futuro, com palestras,
-                workshops, experiências interativas e demonstrações de novas tecnologias.
+                {event.descricao?.trim() || 'O organizador ainda não informou uma descrição para este evento.'}
               </p>
             </section>
 
             <section className="detalhes-evento__section">
-              <h2 className="detalhes-evento__heading">Destaques do Line-up</h2>
-              <div className="detalhes-evento__highlights">
-                {highlights.map((item) => (
-                  <InfoCard key={item.title} title={item.title} description={item.description} />
-                ))}
-              </div>
+              <h2 className="detalhes-evento__heading">Ingressos</h2>
+              {availableTickets.length > 0 ? (
+                <div className="detalhes-evento__highlights">
+                  {availableTickets.map((ticket) => (
+                    <InfoCard
+                      key={ticket.id}
+                      title={ticket.nome}
+                      description={`${ticket.gratuito ? 'Grátis' : formatCurrency(ticket.preco)} • ${ticket.quantidadeDisponivel} disponíveis`}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="detalhes-evento__text">
+                  {selectedSession
+                    ? 'Não há ingressos disponíveis para esta sessão.'
+                    : 'Este evento ainda não possui sessões agendadas.'}
+                </p>
+              )}
             </section>
 
             <section className="detalhes-evento__section">
               <h2 className="detalhes-evento__heading">Localização e Acesso</h2>
-              <InfoCard
-                icon="pin"
-                title="Centro de Inovação Tecnológica"
-                description="Av. das Américas, 5000 — Rio de Janeiro, RJ"
-              />
+              {selectedSession ? (
+                <InfoCard
+                  icon="pin"
+                  title={selectedSession.local.nome}
+                  description={`${selectedSession.local.endereco} — ${selectedSession.local.cidade}, ${selectedSession.local.uf}`}
+                />
+              ) : (
+                <p className="detalhes-evento__text">O local será informado quando houver uma sessão agendada.</p>
+              )}
             </section>
           </div>
 
           <aside className="detalhes-evento__aside">
-            <SectionCard elevated title="Escolha uma data" className="detalhes-evento__purchase">
-              <DateSelector options={dates} value={selectedDate} onChange={setSelectedDate} />
+            <SectionCard elevated title="Sessões disponíveis" className="detalhes-evento__purchase">
+              {dateOptions.length > 0 ? (
+                <DateSelector
+                  options={dateOptions}
+                  value={String(selectedSession?.id ?? '')}
+                  onChange={setSelectedSessionId}
+                />
+              ) : (
+                <p className="detalhes-evento__text">Nenhuma sessão agendada no momento.</p>
+              )}
               <DetailList
                 items={[
-                  { label: 'Data selecionada:', value: current.label },
-                  { label: 'Horário:', value: '14h às 22h' },
-                  { label: 'Classificação:', value: '16+ anos' },
+                  {
+                    label: 'Data:',
+                    value: sessionDate ? formatDate(sessionDate, { dateStyle: 'long' }) : 'Não informada',
+                  },
+                  { label: 'Horário:', value: sessionTime },
+                  {
+                    label: 'Classificação:',
+                    value: event.classificacaoEtariaDescricao || event.classificacaoEtaria,
+                  },
                 ]}
               />
               <div className="detalhes-evento__price">
-                <span className="detalhes-evento__price-label">Valor do ingresso:</span>
-                <strong className="detalhes-evento__price-value">R$ R$ 180,00</strong>
+                <span className="detalhes-evento__price-label">A partir de:</span>
+                <strong className="detalhes-evento__price-value">{priceLabel}</strong>
               </div>
-              <LinkButton href={routeHref('compra')}>Garantir Ingresso</LinkButton>
-              <p className="detalhes-evento__note">
-                Cancelamento gratuito até 7 dias antes do evento.
-              </p>
+              {availableTickets.length > 0 && (
+                <LinkButton href="#/compra">Garantir Ingresso</LinkButton>
+              )}
+              {categoriesQuery.isError && (
+                <p className="detalhes-evento__note" role="alert">
+                  Não foi possível carregar a categoria: {categoriesQuery.error?.message}
+                </p>
+              )}
+              {event.politicaReembolsoDescricao && (
+                <p className="detalhes-evento__note">{event.politicaReembolsoDescricao}</p>
+              )}
             </SectionCard>
           </aside>
         </div>

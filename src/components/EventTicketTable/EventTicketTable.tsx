@@ -4,6 +4,7 @@ type EventTicketRow = {
   type: string
   price: string
   available: string
+  salesPeriod?: string
 }
 
 type EventTicketTableProps = {
@@ -26,7 +27,14 @@ function EventTicketTable({ rows, className }: EventTicketTableProps) {
       <tbody>
         {rows.map((row) => (
           <tr key={row.type}>
-            <td>{row.type}</td>
+            <td>
+              {row.type}
+              {row.salesPeriod && (
+                <small className="event-ticket-table__sales-period">
+                  {row.salesPeriod}
+                </small>
+              )}
+            </td>
             <td>{row.price}</td>
             <td>{row.available}</td>
           </tr>
