@@ -127,6 +127,13 @@ function CriarEvento() {
     }))
   }
 
+  const removeTicket = (index: number) => {
+    setDraft((current) => ({
+      ...current,
+      tickets: current.tickets.filter((_, ticketIndex) => ticketIndex !== index),
+    }))
+  }
+
   const goTo = (target: number) => {
     setStep(Math.min(Math.max(target, 0), steps.length - 1))
     window.scrollTo({ top: 0 })
@@ -176,7 +183,7 @@ function CriarEvento() {
     for (const ticket of draft.tickets) {
       const free = ticket.name.trim().toLowerCase() === 'gratuito'
       const price = free ? 0 : parseMoney(ticket.price)
-      const serviceFee = parseMoney(ticket.serviceFee)
+      const serviceFee = free ? 0 : parseMoney(ticket.serviceFee)
       const quantity = Number(ticket.quantity)
       const purchaseLimit = Number(ticket.purchaseLimit)
 
@@ -298,6 +305,7 @@ function CriarEvento() {
               <EventStepTickets
                 tickets={draft.tickets}
                 onTicketChange={updateTicket}
+                onTicketRemove={removeTicket}
                 onBack={back}
                 onNext={next}
               />

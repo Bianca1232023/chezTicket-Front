@@ -1,10 +1,7 @@
 import EventPanel from '../EventPanel/EventPanel'
-import EventInput from '../EventInput/EventInput'
 import EventSocialLinkField from '../EventSocialLinkField/EventSocialLinkField'
 import EventUploadDropzone from '../EventUploadDropzone/EventUploadDropzone'
-import EventShareButton from '../EventShareButton/EventShareButton'
 import EventFormActions from '../EventFormActions/EventFormActions'
-import Button from '../Button/Button'
 import type { EventDraft } from '../../types/event-draft'
 import './EventStepPromotion.scss'
 
@@ -111,43 +108,6 @@ function EventStepPromotion({
           />
         </EventPanel>
       </div>
-
-      <EventPanel
-        title="Link do Evento"
-        variant="raised"
-        className="event-step-promotion__link"
-      >
-        <p className="event-step-promotion__text">
-          Este será o link público do seu eventona plataforma
-        </p>
-        <div className="event-step-promotion__copy">
-          <EventInput
-            type="text"
-            icon="link"
-            addon
-            readOnly
-            aria-label="Link do evento"
-            defaultValue="chezticket.com/eventos/nome-do-evento"
-          />
-          <Button className="event-step-promotion__copy-button">
-            Copiar link
-          </Button>
-        </div>
-
-        <h2 className="event-step-promotion__share-title">
-          Compartilhe o seu evento
-        </h2>
-        <p className="event-step-promotion__text">
-          Use o seus botões abaixo para divulgar seu Evento nas principais
-          plataformas.
-        </p>
-        <div className="event-step-promotion__share">
-          <EventShareButton network="whatsapp">Whatsapp</EventShareButton>
-          <EventShareButton network="instagram">Instagram</EventShareButton>
-          <EventShareButton network="facebook">Facebook</EventShareButton>
-          <EventShareButton network="copy">Copiar link</EventShareButton>
-        </div>
-      </EventPanel>
 
       <EventFormActions
         nextLabel="Próximo"

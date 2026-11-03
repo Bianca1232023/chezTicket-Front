@@ -247,6 +247,31 @@
   }
 }
 
+.event-step-review__share {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+
+  .event-share {
+    width: auto;
+    min-width: 120px;
+    padding: 0 12px;
+  }
+}
+
+.event-step-review__share-hint,
+.event-step-review__share-status {
+  margin: 10px 0 0;
+  color: tokens.$color-secondary;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.event-step-review__share-status {
+  color: tokens.$feedback-success;
+}
+
 .event-step-review__actions {
   margin-top: 36px;
 }
@@ -379,6 +404,16 @@
   .event-step-review__copy-button {
     width: 44px;
     height: 44px;
+  }
+
+  .event-step-review__share {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+
+    .event-share {
+      min-width: 0;
+    }
   }
 
   .event-step-review__actions {

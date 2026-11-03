@@ -34,7 +34,8 @@ function PinIcon() {
 function PromoBanner({ slides, interval = 6000 }: PromoBannerProps) {
   const [index, setIndex] = useState(0)
   const total = slides.length
-  const current = slides[index % total]
+  const activeIndex = total === 0 ? 0 : index % total
+  const current = slides[activeIndex]
 
   useEffect(() => {
     if (total < 2) return
@@ -47,8 +48,11 @@ function PromoBanner({ slides, interval = 6000 }: PromoBannerProps) {
   }, [index, interval, total])
 
   const go = (direction: 1 | -1) => {
+    if (total === 0) return
     setIndex((value) => (value + direction + total) % total)
   }
+
+  if (!current) return null
 
   return (
     <section className="promo-banner" aria-roledescription="carrossel" aria-label="Eventos em destaque">
@@ -103,10 +107,10 @@ function PromoBanner({ slides, interval = 6000 }: PromoBannerProps) {
           {slides.map((slide, dotIndex) => (
             <button
               key={slide.id}
-              className={`promo-banner__dot${dotIndex === index ? ' is-active' : ''}`}
+              className={`promo-banner__dot${dotIndex === activeIndex ? ' is-active' : ''}`}
               type="button"
               aria-label={`Ir para o banner ${dotIndex + 1}`}
-              aria-current={dotIndex === index ? 'true' : undefined}
+              aria-current={dotIndex === activeIndex ? 'true' : undefined}
               onClick={() => setIndex(dotIndex)}
             />
           ))}

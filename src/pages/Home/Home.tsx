@@ -51,24 +51,21 @@ function Home() {
     selectedCategory === 'all'
       ? events
       : events.filter((event) => String(event.categoriaId) === selectedCategory)
-  const featuredEvent = filteredEvents[0]
-  const promoSlides: PromoBannerSlide[] = featuredEvent
-    ? [
-        {
-          id: String(featuredEvent.id),
-          tag: categoriesById.get(featuredEvent.categoriaId) ?? 'Evento',
-          title: featuredEvent.titulo,
-          tagline: 'Confira datas, local e ingressos',
-          place: 'Evento publicado',
-          placeDetail: 'Consulte os detalhes',
-          href: routeHref('evento', { id: featuredEvent.id }),
-        },
-      ]
-    : []
+  const promoSlides: PromoBannerSlide[] = filteredEvents.slice(0, 3).map((event) => ({
+    id: String(event.id),
+    image: event.imagemCapa ?? undefined,
+    tag: categoriesById.get(event.categoriaId) ?? 'Evento',
+    title: event.titulo,
+    tagline: 'Confira datas, local e ingressos',
+    place: 'Evento publicado',
+    placeDetail: 'Consulte os detalhes',
+    href: routeHref('evento', { id: event.id }),
+  }))
 
   const renderEventCard = (event: ApiEventSummary) => (
     <EventPosterCard
       key={event.id}
+      image={event.imagemCapa ?? undefined}
       tag={categoriesById.get(event.categoriaId) ?? 'Evento'}
       title={event.titulo}
       meta="Consulte datas e ingressos"

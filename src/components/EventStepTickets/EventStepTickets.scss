@@ -16,6 +16,12 @@
   gap: 18px;
 }
 
+.event-step-tickets__remove-notice {
+  margin: 16px 0 0;
+  color: tokens.$color-secondary;
+  font-size: 13px;
+}
+
 .event-step-tickets .event-step-tickets__date {
   max-width: 200px;
 }

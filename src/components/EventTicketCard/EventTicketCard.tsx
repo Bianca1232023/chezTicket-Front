@@ -6,7 +6,8 @@ type EventTicketCardProps = {
   icon: ReactNode
   title: string
   description: string
-  onRemove?: () => void
+  onRemove: () => void
+  canRemove?: boolean
   className?: string
   children: ReactNode
 }
@@ -16,6 +17,7 @@ function EventTicketCard({
   title,
   description,
   onRemove,
+  canRemove = true,
   className,
   children,
 }: EventTicketCardProps) {
@@ -30,7 +32,9 @@ function EventTicketCard({
       <button
         className="event-ticket__remove"
         type="button"
-        aria-label={`Remover ${title}`}
+        aria-label={canRemove ? `Remover ${title}` : 'Mantenha ao menos um ingresso'}
+        title={canRemove ? undefined : 'O evento precisa ter ao menos um ingresso.'}
+        disabled={!canRemove}
         onClick={onRemove}
       >
         <Icon name="trash" />

@@ -12,6 +12,7 @@ export type ApiEventSummary = {
   status: string
   categoriaId: number
   organizadorId: number
+  imagemCapa: string | null
   dataPublicacao: string | null
 }
 
