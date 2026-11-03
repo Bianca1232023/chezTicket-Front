@@ -1,0 +1,44 @@
+@use '../../styles/variables' as tokens;
+
+.status-badge {
+  display: inline-flex;
+  height: 30px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px 0 4px;
+  border: 1px solid currentColor;
+  border-radius: 15px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.status-badge--success {
+  background: tokens.$feedback-success-bg;
+  color: tokens.$feedback-success;
+}
+
+.status-badge--danger {
+  background: tokens.$feedback-danger-bg;
+  color: tokens.$feedback-danger;
+}
+
+.status-badge__icon {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 760px) {
+  .status-badge {
+    height: 28px;
+    gap: 6px;
+    font-size: 14px;
+  }
+
+  .status-badge__icon {
+    width: 20px;
+    height: 20px;
+  }
+}

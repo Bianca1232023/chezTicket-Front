@@ -1,0 +1,23 @@
+.event-social-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.event-social-icon--instagram {
+  border-radius: 25%;
+}
+
+.event-social-icon--facebook {
+  border-radius: 50%;
+}
+
+.event-social-icon--x {
+  border-radius: 20%;
+}
+
+.event-social-icon--linkedin {
+  border-radius: 10%;
+}

@@ -1,0 +1,38 @@
+@use '../../styles/variables' as tokens;
+
+.event-field {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 7px;
+}
+
+.event-field__label {
+  color: tokens.$color-primary;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.event-field--muted {
+  gap: 6px;
+
+  .event-field__label {
+    color: tokens.$color-secondary;
+    font-size: 13px;
+    font-weight: 500;
+  }
+}
+
+@media (max-width: 760px) {
+  .event-field {
+    gap: 8px;
+  }
+
+  .event-field__label,
+  .event-field--muted .event-field__label {
+    color: tokens.$color-primary;
+    font-size: 14px;
+    font-weight: 700;
+  }
+}

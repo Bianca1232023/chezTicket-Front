@@ -1,0 +1,50 @@
+@use '../../styles/variables' as tokens;
+
+.event-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.event-actions__secondary {
+  display: flex;
+  gap: 12px;
+}
+
+.event-actions .event-actions__button {
+  min-height: 48px;
+  padding: 0 24px;
+  border-color: tokens.$border-default;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.event-actions .event-actions__button--back {
+  min-width: 115px;
+  font-weight: 500;
+}
+
+.event-actions .event-actions__button--next {
+  min-width: 120px;
+  border-color: tokens.$bg-primary;
+}
+
+@media (max-width: 760px) {
+  .event-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .event-actions__secondary {
+    gap: 8px;
+  }
+
+  .event-actions .event-actions__button {
+    flex: 1;
+    font-size: 14px;
+  }
+}

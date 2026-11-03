@@ -1,0 +1,54 @@
+@use '../../styles/variables' as tokens;
+
+.link-button {
+  display: flex;
+  height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 6px;
+  background: tokens.$bg-primary;
+  color: tokens.$color-quaternary;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    background: tokens.$bg-tertiary;
+  }
+
+  &:focus-visible {
+    outline: 2px solid tokens.$bg-primary;
+    outline-offset: 3px;
+  }
+}
+
+.link-button__chevron {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.4;
+}
+
+.link-button__arrow {
+  display: none;
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.4;
+}
+
+@media (max-width: 760px) {
+  .link-button {
+    height: 48px;
+    gap: 6px;
+    border-radius: 8px;
+    font-size: 16px;
+  }
+
+  .link-button__chevron {
+    display: none;
+  }
+
+  .link-button__arrow {
+    display: block;
+  }
+}

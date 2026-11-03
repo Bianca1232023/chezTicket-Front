@@ -1,0 +1,132 @@
+@use '../../styles/variables' as tokens;
+
+.event-ticket {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr) 40px;
+  column-gap: 24px;
+  padding: 30px 40px 48px 30px;
+  border: 1px solid tokens.$color-tertiary;
+  border-radius: 24px;
+  background: tokens.$color-quaternary;
+  box-shadow: 0 3px 5px rgba(tokens.$color-primary, 0.3);
+}
+
+.event-ticket__icon {
+  display: flex;
+  width: 60px;
+  height: 60px;
+  grid-row: 1 / span 2;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(tokens.$bg-primary, 0.25);
+  border-radius: 8px;
+  background: rgba(tokens.$bg-primary, 0.12);
+  color: tokens.$bg-primary;
+
+  svg {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+.event-ticket__title {
+  grid-column: 2;
+  align-self: end;
+  margin: 0;
+  color: tokens.$color-primary;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.event-ticket__description {
+  grid-column: 2;
+  margin: 0;
+  color: tokens.$color-secondary;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.event-ticket__fields {
+  display: grid;
+  grid-column: 2;
+  grid-template-columns: repeat(2, minmax(0, 250px));
+  gap: 32px 96px;
+  margin-top: 22px;
+}
+
+.event-ticket__remove {
+  display: flex;
+  width: 32px;
+  height: 32px;
+  grid-column: 3;
+  grid-row: 3;
+  align-items: center;
+  justify-content: center;
+  margin-top: 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: tokens.$color-tertiary;
+  cursor: pointer;
+
+  svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  &:hover {
+    color: tokens.$feedback-danger;
+  }
+
+  &:focus-visible {
+    outline: 2px solid tokens.$bg-primary;
+    outline-offset: 2px;
+  }
+}
+
+@media (max-width: 760px) {
+  .event-ticket {
+    grid-template-columns: 44px minmax(0, 1fr) 32px;
+    column-gap: 14px;
+    padding: 16px;
+    border-color: tokens.$border-default;
+    border-radius: 16px;
+    box-shadow: none;
+  }
+
+  .event-ticket__icon {
+    width: 44px;
+    height: 44px;
+    grid-row: 1;
+
+    svg {
+      width: 26px;
+      height: 26px;
+    }
+  }
+
+  .event-ticket__title {
+    align-self: center;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .event-ticket__description {
+    grid-column: 1 / -1;
+    margin-top: 16px;
+    font-size: 14px;
+  }
+
+  .event-ticket__fields {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    margin-top: 14px;
+  }
+
+  .event-ticket__remove {
+    grid-row: 1;
+    margin-top: 0;
+  }
+}

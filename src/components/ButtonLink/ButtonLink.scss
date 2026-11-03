@@ -1,0 +1,31 @@
+@use '../../styles/variables' as tokens;
+
+.button-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 24px;
+  border-radius: 4px;
+  background: tokens.$bg-primary;
+  color: tokens.$color-quaternary;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    background: tokens.$bg-tertiary;
+  }
+
+  &:focus-visible {
+    outline: 2px solid tokens.$color-quaternary;
+    outline-offset: 3px;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.4;
+  }
+}

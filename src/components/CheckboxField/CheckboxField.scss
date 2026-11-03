@@ -1,0 +1,30 @@
+@use '../../styles/variables' as tokens;
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: tokens.$color-secondary;
+  font-size: 19px;
+  line-height: 1.4;
+
+  input {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    accent-color: tokens.$bg-primary;
+  }
+}
+
+@media (max-width: 760px) {
+  .check-row {
+    gap: 8px;
+    font-size: 14px;
+
+    input {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+    }
+  }
+}

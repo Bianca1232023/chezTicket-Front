@@ -1,0 +1,57 @@
+$brand-red: #eb001b;
+$brand-orange: #f79e1b;
+
+.payment-method {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.payment-method__logo {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.payment-method__circle {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.payment-method__circle--red {
+  background: $brand-red;
+}
+
+.payment-method__circle--orange {
+  margin-left: -9px;
+  background: $brand-orange;
+  opacity: 0.9;
+}
+
+.payment-method__mask {
+  font-size: 0.7em;
+  letter-spacing: 0.05em;
+}
+
+.payment-method__number {
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .payment-method__circle {
+    width: 26px;
+    height: 26px;
+  }
+
+  .payment-method__circle--orange {
+    margin-left: -10px;
+  }
+
+  .payment-method__number {
+    font-size: 15px;
+  }
+}

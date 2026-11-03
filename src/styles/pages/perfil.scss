@@ -1,0 +1,149 @@
+@use '../variables' as tokens;
+
+.perfil {
+  padding: 25px 0 80px;
+  background: tokens.$color-quaternary;
+}
+
+.perfil__container {
+  width: 100%;
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 0 28px 0 32px;
+}
+
+.perfil .tab-bar {
+  margin-left: 4px;
+}
+
+.perfil__section {
+  margin-inline: 4px;
+}
+
+.perfil__section {
+  margin-top: 32px;
+}
+
+.perfil__section--history {
+  margin-top: 49px;
+}
+
+.perfil__section-title {
+  margin: 0 0 30px;
+  color: tokens.$color-primary;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.perfil__section--history .perfil__section-title {
+  margin-bottom: 25px;
+}
+
+.perfil__events {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px 49px;
+  padding: 0 5px;
+}
+
+.perfil__empty-events {
+  display: flex;
+  min-height: 260px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  border: 1px solid tokens.$border-default;
+  border-radius: 12px;
+  background: tokens.$color-quaternary;
+  text-align: center;
+
+  h3 {
+    margin: 16px 0 0;
+    color: tokens.$color-primary;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  p {
+    margin: 8px 0 20px;
+    color: tokens.$color-secondary;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+
+.perfil__empty-events-icon {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  border-radius: 50%;
+  background: tokens.$bg-tint-blue;
+  color: tokens.$bg-primary;
+
+  svg {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+.perfil .data-table td:last-child {
+  color: tokens.$color-primary;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .perfil {
+    padding: 28px 0 37px;
+  }
+
+  .perfil__container {
+    padding: 0 20px;
+  }
+
+  .perfil .tab-bar {
+    margin-left: 0;
+  }
+
+  .perfil__section {
+    margin-inline: 0;
+  }
+
+  .perfil__section {
+    margin-top: 24px;
+  }
+
+  .perfil__section--history {
+    margin-top: 32px;
+  }
+
+  .perfil__section-title {
+    margin-bottom: 20px;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 28px;
+  }
+
+  .perfil__events {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 22px;
+    padding: 0;
+  }
+
+  .perfil__empty-events {
+    min-height: 240px;
+    padding: 28px 16px;
+  }
+
+  .perfil__section--history .perfil__section-title {
+    margin-bottom: 18px;
+  }
+
+  .perfil .data-table td:last-child {
+    color: tokens.$bg-secondary;
+  }
+}

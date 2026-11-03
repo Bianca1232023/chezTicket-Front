@@ -1,0 +1,81 @@
+@use '../../styles/variables' as tokens;
+
+.info-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 14px 16px;
+  border: 1px solid tokens.$surface-muted;
+  border-radius: 8px;
+  background: tokens.$color-quaternary;
+}
+
+.info-card--with-icon {
+  padding: 18px 20px;
+}
+
+.info-card__icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  align-self: flex-start;
+  margin-top: 6px;
+  color: tokens.$bg-primary;
+}
+
+.info-card__title {
+  margin: 0;
+  color: tokens.$color-primary;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.info-card__description {
+  margin: 4px 0 0;
+  color: tokens.$color-tertiary;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.info-card--with-icon .info-card__title {
+  font-size: 15px;
+}
+
+.info-card--with-icon .info-card__description {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  .info-card {
+    padding: 19px 17px;
+    border-radius: 16px;
+  }
+
+  .info-card--with-icon {
+    gap: 14px;
+    padding: 18px 20px 18px 17px;
+  }
+
+  .info-card__title {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .info-card__description {
+    margin-top: 12px;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .info-card--with-icon .info-card__title {
+    font-size: 14px;
+  }
+
+  .info-card--with-icon .info-card__description {
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 18px;
+  }
+}

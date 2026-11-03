@@ -1,0 +1,86 @@
+@use '../../styles/variables' as tokens;
+
+.payment-card {
+  position: relative;
+  min-height: 140px;
+  border-radius: 12px;
+  background: tokens.$bg-quaternary;
+  color: tokens.$color-quaternary;
+}
+
+.payment-card__chip {
+  position: absolute;
+  top: 28px;
+  left: 20px;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+}
+
+.payment-card__brand {
+  position: absolute;
+  top: 20px;
+  right: 28px;
+  display: flex;
+  width: 38px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.payment-card__circle {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+}
+
+.payment-card__circle--red {
+  background: #eb001b;
+}
+
+.payment-card__circle--orange {
+  margin-left: -6px;
+  background: #f79e1b;
+  opacity: 0.95;
+}
+
+.payment-card__brand-name {
+  width: 100%;
+  margin-top: 1px;
+  font-size: 6px;
+  line-height: 7px;
+  text-align: center;
+}
+
+.payment-card__number {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+@media (max-width: 760px) {
+  .payment-card {
+    min-height: 152px;
+  }
+
+  .payment-card__chip {
+    top: 30px;
+    left: 20px;
+  }
+
+  .payment-card__brand {
+    top: 22px;
+    right: 30px;
+  }
+
+  .payment-card__number {
+    bottom: 24px;
+    font-size: 16px;
+  }
+}

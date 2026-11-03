@@ -1,0 +1,14 @@
+.auth-form {
+  display: grid;
+  gap: 24px;
+}
+
+.remember-row {
+  margin-top: -6px;
+}
+
+@media (max-width: 760px) {
+  .remember-row {
+    margin-top: -2px;
+  }
+}

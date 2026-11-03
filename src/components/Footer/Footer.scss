@@ -1,0 +1,108 @@
+@use '../../styles/variables' as tokens;
+
+.footer {
+  display: grid;
+  grid-template-areas:
+    'text region'
+    'social social';
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 16px 24px;
+  min-height: 197px;
+  align-content: end;
+  padding: 28px 14px 28px 18px;
+  background: tokens.$bg-primary;
+  color: tokens.$color-quaternary;
+}
+
+.footer__text {
+  grid-area: text;
+  max-width: 200px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.footer__social {
+  display: flex;
+  grid-area: social;
+  align-items: center;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  a {
+    display: block;
+    color: inherit;
+
+    &:focus-visible {
+      outline: 2px solid tokens.$color-quaternary;
+      outline-offset: 3px;
+    }
+  }
+
+  svg {
+    display: block;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.footer__region {
+  display: flex;
+  grid-area: region;
+  height: 34px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid tokens.$color-quaternary;
+  border-radius: 8px;
+  background: transparent;
+  color: tokens.$color-quaternary;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  svg:first-child {
+    width: 18px;
+    height: 13px;
+  }
+
+  svg:last-child {
+    width: 12px;
+    height: 12px;
+    margin-left: 6px;
+  }
+}
+
+@media (max-width: 760px) {
+  .footer {
+    grid-template-areas:
+      'text text'
+      'social region';
+    min-height: 0;
+    padding: 28px 24px 32px;
+  }
+
+  .footer__text {
+    max-width: none;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+
+  .footer__social {
+    gap: 16px;
+
+    svg {
+      width: 26px;
+      height: 26px;
+    }
+  }
+
+  .footer__region {
+    height: 36px;
+    font-size: 14px;
+  }
+}

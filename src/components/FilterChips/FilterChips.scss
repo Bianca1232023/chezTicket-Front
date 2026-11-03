@@ -1,0 +1,42 @@
+@use '../../styles/variables' as tokens;
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.filter-chips__chip {
+  height: 35px;
+  padding: 0 16px;
+  border: 1px solid tokens.$border-default;
+  border-radius: 999px;
+  background: tokens.$color-quaternary;
+  color: tokens.$color-primary;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &.is-active {
+    border-color: tokens.$color-primary;
+    background: tokens.$color-primary;
+    color: tokens.$color-quaternary;
+  }
+
+  &:focus-visible {
+    outline: 2px solid tokens.$bg-primary;
+    outline-offset: 2px;
+  }
+}
+
+@media (max-width: 760px) {
+  .filter-chips {
+    gap: 8px;
+  }
+
+  .filter-chips__chip {
+    height: 34px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+}

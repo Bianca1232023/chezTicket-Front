@@ -1,0 +1,39 @@
+@use '../../styles/variables' as tokens;
+@use '../EventField/control';
+
+.event-select {
+  @include control.control;
+
+  position: relative;
+
+  select {
+    @include control.control-element;
+
+    height: 46px;
+    appearance: none;
+    cursor: pointer;
+
+    &:invalid {
+      color: tokens.$color-tertiary;
+    }
+  }
+
+  svg {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    width: 18px;
+    height: 18px;
+    color: tokens.$color-secondary;
+    pointer-events: none;
+    transform: translateY(-50%);
+  }
+}
+
+@media (max-width: 760px) {
+  .event-select svg {
+    right: 14px;
+    width: 14px;
+    height: 14px;
+  }
+}

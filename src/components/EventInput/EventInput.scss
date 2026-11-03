@@ -1,0 +1,60 @@
+@use '../../styles/variables' as tokens;
+@use '../EventField/control';
+
+.event-input {
+  @include control.control;
+
+  input {
+    @include control.control-element;
+  }
+}
+
+.event-input__icon {
+  display: flex;
+  flex: 0 0 auto;
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.event-input__icon--dark {
+  color: tokens.$color-primary;
+}
+
+.event-input__icon--accent {
+  color: tokens.$bg-primary;
+}
+
+.event-input__icon--muted {
+  color: tokens.$color-tertiary;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.event-input--addon {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+
+  .event-input__icon {
+    width: 44px;
+    align-items: center;
+    justify-content: center;
+    align-self: stretch;
+    border-right: 1px solid tokens.$border-default;
+
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  input {
+    padding: 0 14px;
+  }
+}

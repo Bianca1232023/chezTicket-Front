@@ -1,0 +1,66 @@
+@use '../../styles/variables' as tokens;
+
+.event-ticket-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: tokens.$color-primary;
+  font-size: 14px;
+
+  th,
+  td {
+    padding: 0;
+    text-align: left;
+  }
+
+  th:last-child,
+  td:last-child {
+    text-align: center;
+  }
+
+  th {
+    padding-bottom: 8px;
+    border-bottom: 1px solid tokens.$color-secondary;
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  td {
+    height: 36px;
+    padding: 0 9px;
+    border-bottom: 1px solid tokens.$border-default;
+  }
+
+  td:nth-child(2) {
+    font-weight: 500;
+  }
+
+  td:last-child {
+    font-weight: 500;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .event-ticket-table {
+    font-size: 13px;
+
+    th {
+      border-bottom-color: tokens.$border-default;
+      color: tokens.$color-secondary;
+      font-size: 13px;
+    }
+
+    td {
+      height: 38px;
+      padding: 0;
+    }
+
+    th:last-child,
+    td:last-child {
+      text-align: right;
+    }
+  }
+}

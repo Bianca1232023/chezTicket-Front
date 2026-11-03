@@ -1,0 +1,79 @@
+@use '../../styles/variables' as tokens;
+
+.hero-banner {
+  position: relative;
+  display: flex;
+  height: 341px;
+  align-items: flex-end;
+  overflow: hidden;
+  background: tokens.$color-primary;
+  color: tokens.$color-quaternary;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(tokens.$color-primary, 0.7) 0%,
+      rgba(tokens.$color-primary, 0.6) 45%,
+      rgba(tokens.$color-primary, 0.9) 100%
+    );
+    content: '';
+  }
+}
+
+.hero-banner__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 45%;
+}
+
+.hero-banner__content {
+  position: relative;
+  z-index: 1;
+  width: min(1280px, 100% - 160px);
+  margin: 0 auto;
+  padding-bottom: 46px;
+}
+
+.hero-banner__overline {
+  margin: 0 0 14px;
+  color: tokens.$bg-primary;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.hero-banner__title {
+  margin: 0;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+@media (max-width: 760px) {
+  .hero-banner {
+    height: 300px;
+  }
+
+  .hero-banner__content {
+    width: calc(100% - 40px);
+    padding-bottom: 24px;
+  }
+
+  .hero-banner__overline {
+    color: tokens.$bg-quaternary;
+    font-size: 12px;
+    letter-spacing: 0;
+  }
+
+  .hero-banner__title {
+    font-size: 28px;
+    line-height: 1.25;
+  }
+}

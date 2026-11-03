@@ -1,0 +1,46 @@
+@use '../variables' as tokens;
+
+.auth-page--register {
+  .auth-form {
+    display: grid;
+    gap: 16px;
+  }
+
+  .auth-field {
+    gap: 5px;
+  }
+
+  .terms-row {
+    margin: 28px 0 12px;
+  }
+
+  .text-link {
+    color: tokens.$bg-primary;
+    font-weight: 700;
+  }
+
+  .auth-switch {
+    margin-top: 28px;
+  }
+}
+
+@media (max-width: 760px) {
+  .auth-page--register {
+    .auth-panel {
+      padding-bottom: 24px;
+    }
+
+    .auth-form {
+      gap: 24px;
+    }
+
+    .terms-row {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .auth-switch {
+      margin-top: 12px;
+    }
+  }
+}

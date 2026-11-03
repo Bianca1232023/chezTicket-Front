@@ -1,0 +1,19 @@
+$bg-primary: #372BD9;
+$bg-secondary: #6C2BD9;
+$bg-tertiary: #2117E0;
+$bg-quaternary: #9747FF;
+$color-primary: #000000;
+$color-secondary: #646466;
+$color-tertiary: #8E8E93;
+$color-quaternary: #FFFFFF;
+
+// Tokens complementares derivados das referências em design/ (os acima não foram alterados).
+// Tons claros de roxo/azul devem usar rgba($bg-primary, α) em vez de novos HEX.
+$surface-page: #F9FAFB;
+$surface-muted: #ECECEC;
+$border-default: #E2E4E7;
+$bg-tint-blue: #E7F6FD;
+$feedback-success: #00AD59;
+$feedback-success-bg: #DDF1E5;
+$feedback-danger: #B23414;
+$feedback-danger-bg: #F3978A;
