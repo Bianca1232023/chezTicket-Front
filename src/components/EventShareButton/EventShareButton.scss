@@ -49,18 +49,6 @@
   background: #1877f2;
 }
 
-.event-share--copy {
-  background: tokens.$surface-page;
-  color: tokens.$color-primary;
-  font-size: 15px;
-  font-weight: 500;
-
-  svg {
-    width: 22px;
-    height: 22px;
-  }
-}
-
 @media (max-width: 760px) {
   .event-share {
     width: 100%;
@@ -75,8 +63,4 @@
     }
   }
 
-  .event-share--copy {
-    background: tokens.$surface-muted;
-    font-size: 14px;
-  }
 }

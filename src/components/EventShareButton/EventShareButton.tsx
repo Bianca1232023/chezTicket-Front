@@ -3,14 +3,13 @@ import Icon, { type IconName } from '../Icon/Icon'
 import './EventShareButton.scss'
 
 type EventShareButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  network: 'whatsapp' | 'instagram' | 'facebook' | 'copy'
+  network: 'whatsapp' | 'instagram' | 'facebook'
 }
 
 const icons: Record<EventShareButtonProps['network'], IconName> = {
   whatsapp: 'whatsapp',
   instagram: 'instagram',
   facebook: 'facebook',
-  copy: 'link',
 }
 
 function EventShareButton({

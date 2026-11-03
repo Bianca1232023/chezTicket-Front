@@ -4,14 +4,14 @@ import './PromoBanner.scss'
 
 export type PromoBannerSlide = {
   id: string
-  image: string
+  image?: string
   tag: string
   title: string
-  tagline: string
-  place: string
-  placeDetail: string
-  day: string
-  month: string
+  tagline?: string
+  place?: string
+  placeDetail?: string
+  day?: string
+  month?: string
   href: string
 }
 
@@ -34,7 +34,8 @@ function PinIcon() {
 function PromoBanner({ slides, interval = 6000 }: PromoBannerProps) {
   const [index, setIndex] = useState(0)
   const total = slides.length
-  const current = slides[index % total]
+  const activeIndex = total === 0 ? 0 : index % total
+  const current = slides[activeIndex]
 
   useEffect(() => {
     if (total < 2) return
@@ -47,58 +48,69 @@ function PromoBanner({ slides, interval = 6000 }: PromoBannerProps) {
   }, [index, interval, total])
 
   const go = (direction: 1 | -1) => {
+    if (total === 0) return
     setIndex((value) => (value + direction + total) % total)
   }
 
+  if (!current) return null
+
   return (
     <section className="promo-banner" aria-roledescription="carrossel" aria-label="Eventos em destaque">
-      <button
-        className="promo-banner__arrow promo-banner__arrow--prev"
-        type="button"
-        aria-label="Banner anterior"
-        onClick={() => go(-1)}
-      >
-        <Icon name="arrow-left" />
-      </button>
+      {total > 1 && (
+        <button
+          className="promo-banner__arrow promo-banner__arrow--prev"
+          type="button"
+          aria-label="Banner anterior"
+          onClick={() => go(-1)}
+        >
+          <Icon name="arrow-left" />
+        </button>
+      )}
 
       <a className="promo-banner__slide" key={current.id} href={current.href} aria-live="polite">
-        <img className="promo-banner__image" src={current.image} alt="" />
+        {current.image && <img className="promo-banner__image" src={current.image} alt="" />}
         <span className="promo-banner__tag">{current.tag}</span>
-        <span className="promo-banner__date">
-          <strong>{current.day}</strong>
-          <span>{current.month}</span>
-        </span>
+        {(current.day || current.month) && (
+          <span className="promo-banner__date">
+            {current.day && <strong>{current.day}</strong>}
+            {current.month && <span>{current.month}</span>}
+          </span>
+        )}
         <span className="promo-banner__content">
           <strong className="promo-banner__title">{current.title}</strong>
-          <span className="promo-banner__tagline">{current.tagline}</span>
-          <span className="promo-banner__place">
-            <PinIcon />
-            <span>
-              <strong>{current.place}</strong>
-              <span>{current.placeDetail}</span>
+          {current.tagline && <span className="promo-banner__tagline">{current.tagline}</span>}
+          {(current.place || current.placeDetail) && (
+            <span className="promo-banner__place">
+              <PinIcon />
+              <span>
+                {current.place && <strong>{current.place}</strong>}
+                {current.placeDetail && <span>{current.placeDetail}</span>}
+              </span>
             </span>
-          </span>
+          )}
         </span>
       </a>
 
-      <button
-        className="promo-banner__arrow promo-banner__arrow--next"
-        type="button"
-        aria-label="Próximo banner"
-        onClick={() => go(1)}
-      >
-        <Icon name="arrow-right" />
-      </button>
+      {total > 1 && (
+        <button
+          className="promo-banner__arrow promo-banner__arrow--next"
+          type="button"
+          aria-label="Próximo banner"
+          onClick={() => go(1)}
+        >
+          <Icon name="arrow-right" />
+        </button>
+      )}
 
       {total > 1 && (
         <div className="promo-banner__dots">
           {slides.map((slide, dotIndex) => (
             <button
               key={slide.id}
-              className={`promo-banner__dot${dotIndex === index ? ' is-active' : ''}`}
+              className={`promo-banner__dot${dotIndex === activeIndex ? ' is-active' : ''}`}
               type="button"
               aria-label={`Ir para o banner ${dotIndex + 1}`}
-              aria-current={dotIndex === index ? 'true' : undefined}
+              aria-current={dotIndex === activeIndex ? 'true' : undefined}
               onClick={() => setIndex(dotIndex)}
             />
           ))}

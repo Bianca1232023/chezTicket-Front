@@ -23,16 +23,28 @@ const ROUTES: Route[] = [
   'perfil',
 ]
 
-export const routeHref = (route: Route) => `#/${route}`
+export const routeHref = (
+  route: Route,
+  params?: Record<string, string | number>,
+) => {
+  const query = new URLSearchParams()
+  Object.entries(params ?? {}).forEach(([key, value]) => query.set(key, String(value)))
+  const search = query.toString()
 
-export const navigate = (route: Route) => {
-  window.location.hash = routeHref(route)
+  return `#/${route}${search ? `?${search}` : ''}`
+}
+
+export const navigate = (route: Route, params?: Record<string, string | number>) => {
+  window.location.hash = routeHref(route, params)
 }
 
 const readRoute = (): Route => {
-  const name = window.location.hash.replace(/^#\/?/, '')
+  const name = window.location.hash.replace(/^#\/?/, '').split('?')[0]
   return ROUTES.find((route) => route === name) ?? 'home'
 }
+
+const readRouteParam = (key: string) =>
+  new URLSearchParams(window.location.hash.split('?')[1] ?? '').get(key) ?? ''
 
 const subscribe = (callback: () => void) => {
   window.addEventListener('hashchange', callback)
@@ -41,4 +53,8 @@ const subscribe = (callback: () => void) => {
 
 export function useRoute(): Route {
   return useSyncExternalStore(subscribe, readRoute)
+}
+
+export function useRouteParam(key: string): string {
+  return useSyncExternalStore(subscribe, () => readRouteParam(key))
 }

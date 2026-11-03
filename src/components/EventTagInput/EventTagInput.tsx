@@ -3,18 +3,19 @@ import './EventTagInput.scss'
 
 type EventTagInputProps = {
   id?: string
-  initialTags?: string[]
+  tags: string[]
+  onTagsChange: (tags: string[]) => void
   placeholder?: string
   className?: string
 }
 
 function EventTagInput({
   id,
-  initialTags = [],
+  tags,
+  onTagsChange,
   placeholder = 'Adicionar tag...',
   className,
 }: EventTagInputProps) {
-  const [tags, setTags] = useState(initialTags)
   const [value, setValue] = useState('')
   const classes = ['event-tags', className].filter(Boolean).join(' ')
 
@@ -23,10 +24,10 @@ function EventTagInput({
 
     if (event.key === 'Enter') {
       event.preventDefault()
-      if (tag && !tags.includes(tag)) setTags([...tags, tag])
+      if (tag && !tags.includes(tag)) onTagsChange([...tags, tag])
       setValue('')
     } else if (event.key === 'Backspace' && !value) {
-      setTags(tags.slice(0, -1))
+      onTagsChange(tags.slice(0, -1))
     }
   }
 
