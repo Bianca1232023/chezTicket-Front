@@ -1,0 +1,59 @@
+@use '../../styles/variables' as tokens;
+
+.event-social-link {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 450px);
+  align-items: center;
+  column-gap: 14px;
+}
+
+.event-social-link__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.event-social-link .event-social-link__icon {
+  width: 60px;
+  height: 60px;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.event-social-link .event-input {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+@media (max-width: 760px) {
+  .event-social-link {
+    grid-template-columns: 28px minmax(0, 1fr);
+    column-gap: 12px;
+    row-gap: 8px;
+  }
+
+  .event-social-link__label {
+    position: static;
+    width: auto;
+    height: auto;
+    grid-column: 2;
+    grid-row: 1;
+    overflow: visible;
+    clip-path: none;
+    color: tokens.$color-primary;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .event-social-link .event-social-link__icon {
+    width: 28px;
+    height: 28px;
+    grid-row: 2;
+  }
+
+  .event-social-link .event-input {
+    grid-row: 2;
+  }
+}

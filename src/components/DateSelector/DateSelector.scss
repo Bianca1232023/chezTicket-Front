@@ -1,0 +1,77 @@
+@use '../../styles/variables' as tokens;
+
+.date-selector {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.date-selector__option {
+  display: flex;
+  height: 62px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  border: 1px solid tokens.$surface-muted;
+  border-radius: 8px;
+  background: tokens.$surface-page;
+  color: tokens.$color-primary;
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid tokens.$bg-primary;
+    outline-offset: 2px;
+  }
+}
+
+.date-selector__option--selected {
+  border-color: tokens.$bg-primary;
+  background: tokens.$bg-primary;
+  color: tokens.$color-quaternary;
+}
+
+.date-selector__weekday {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  opacity: 0.9;
+}
+
+.date-selector__option:not(.date-selector__option--selected) .date-selector__weekday {
+  color: tokens.$color-secondary;
+}
+
+.date-selector__day {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 22px;
+}
+
+@media (max-width: 760px) {
+  .date-selector {
+    gap: 9px;
+  }
+
+  .date-selector__option {
+    height: 66px;
+    border-color: transparent;
+    background: rgba(tokens.$color-tertiary, 0.1);
+  }
+
+  .date-selector__option--selected {
+    background: tokens.$bg-primary;
+  }
+
+  .date-selector__weekday {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .date-selector__day {
+    font-size: 20px;
+  }
+}

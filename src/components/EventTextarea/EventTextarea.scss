@@ -1,0 +1,29 @@
+@use '../../styles/variables' as tokens;
+@use '../EventField/control';
+
+.event-textarea {
+  @include control.control;
+  @include control.control-element;
+
+  display: block;
+  min-height: 120px;
+  padding: 15px;
+  border: 1px solid tokens.$border-default;
+  background: tokens.$color-quaternary;
+  color: tokens.$color-primary;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+
+  &:focus {
+    border-color: tokens.$bg-primary;
+    outline: 1px solid tokens.$bg-primary;
+  }
+}
+
+@media (max-width: 760px) {
+  .event-textarea {
+    min-height: 126px;
+    padding: 13px;
+  }
+}

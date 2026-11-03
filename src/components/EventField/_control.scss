@@ -1,0 +1,41 @@
+@use '../../styles/variables' as tokens;
+
+@mixin control {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 15px;
+  border: 1px solid tokens.$border-default;
+  border-radius: 6px;
+  background: tokens.$color-quaternary;
+  color: tokens.$color-primary;
+  font-size: 14px;
+
+  &:focus-within {
+    border-color: tokens.$bg-primary;
+    outline: 1px solid tokens.$bg-primary;
+  }
+
+  @media (max-width: 760px) {
+    min-height: 47px;
+  }
+}
+
+@mixin control-element {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: inherit;
+  padding: 0;
+
+  &::placeholder {
+    color: tokens.$color-tertiary;
+    opacity: 1;
+  }
+}

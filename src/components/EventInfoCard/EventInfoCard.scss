@@ -1,0 +1,181 @@
+@use '../../styles/variables' as tokens;
+
+.event-info-card {
+  position: relative;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid tokens.$border-default;
+  border-radius: 16px;
+  background: tokens.$color-quaternary;
+  box-shadow: 0 1px 3px rgba(tokens.$color-primary, 0.06);
+}
+
+.event-info-card__image {
+  display: block;
+  width: 100%;
+  height: 219px;
+  object-fit: cover;
+}
+
+.event-info-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 17px 24px 20px;
+}
+
+.event-info-card__top {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.event-info-card__category {
+  color: tokens.$bg-secondary;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.event-info-card__price {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.event-info-card__sold-out {
+  display: inline-flex;
+  height: 32px;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding: 0 14px 0 10px;
+  border: 1px solid tokens.$feedback-danger;
+  border-radius: 16px;
+  background: tokens.$feedback-danger-bg;
+  color: tokens.$feedback-danger;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  + .event-info-card__price {
+    margin-left: 0;
+  }
+}
+
+.event-info-card__title {
+  margin: 8px 0 0;
+  padding-bottom: 16px;
+  border-bottom: 1px solid tokens.$surface-muted;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 22px;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+
+    // Link esticado: o card inteiro leva ao detalhe do evento.
+    &::after {
+      position: absolute;
+      inset: 0;
+      content: '';
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+
+    &:focus-visible::after {
+      border-radius: 16px;
+      outline: 2px solid tokens.$bg-primary;
+      outline-offset: -2px;
+    }
+  }
+}
+
+.event-info-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 13px 0 0;
+  padding: 0;
+  color: tokens.$color-tertiary;
+  font-size: 14px;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 17px;
+  }
+
+  svg {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 auto;
+  }
+
+  li:last-child svg {
+    width: 20px;
+    height: 20px;
+    margin: 0 -1px 0 -2px;
+    stroke-width: 1.6;
+  }
+}
+
+@media (max-width: 760px) {
+  .event-info-card {
+    border-radius: 14px;
+  }
+
+  .event-info-card__image {
+    height: 200px;
+  }
+
+  .event-info-card__body {
+    padding: 14px 18px 20px;
+  }
+
+  .event-info-card__top {
+    min-height: 0;
+  }
+
+  .event-info-card__category {
+    font-size: 11px;
+  }
+
+  .event-info-card__price {
+    font-size: 14px;
+  }
+
+  .event-info-card__sold-out {
+    height: 28px;
+    font-size: 13px;
+  }
+
+  .event-info-card__title {
+    margin-top: 14px;
+    padding-bottom: 14px;
+    font-size: 18px;
+    line-height: 25px;
+  }
+
+  .event-info-card__meta {
+    gap: 10px;
+    margin-top: 14px;
+    font-size: 14px;
+  }
+}

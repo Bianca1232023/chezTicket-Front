@@ -1,0 +1,52 @@
+@use '../../styles/variables' as tokens;
+
+.event-step-tickets {
+  padding: 30px 24px 24px;
+
+  .event-panel__title {
+    margin-bottom: 20px;
+    padding-left: 6px;
+    font-size: 22px;
+    font-weight: 600;
+  }
+}
+
+.event-step-tickets__list {
+  display: grid;
+  gap: 18px;
+}
+
+.event-step-tickets .event-step-tickets__date {
+  max-width: 200px;
+}
+
+.event-step-tickets__actions {
+  margin-top: 16px;
+}
+
+@media (max-width: 760px) {
+  .event-step-tickets {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+
+    .event-panel__title {
+      margin-bottom: 16px;
+      padding-left: 0;
+      font-size: 20px;
+    }
+  }
+
+  .event-step-tickets__list {
+    gap: 20px;
+  }
+
+  .event-step-tickets .event-step-tickets__date {
+    max-width: none;
+  }
+
+  .event-step-tickets__actions {
+    margin-top: 16px;
+  }
+}

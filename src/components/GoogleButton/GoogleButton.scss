@@ -1,0 +1,21 @@
+.button.google-button {
+  gap: 16px;
+  min-height: 66px;
+
+  img {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .button.google-button {
+    min-height: 48px;
+
+    img {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}

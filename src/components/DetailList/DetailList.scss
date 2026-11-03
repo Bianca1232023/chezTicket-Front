@@ -1,0 +1,42 @@
+@use '../../styles/variables' as tokens;
+
+.detail-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 13px 16px;
+  border-radius: 8px;
+  background: rgba(tokens.$color-tertiary, 0.06);
+}
+
+.detail-list__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 21px;
+  font-size: 14px;
+
+  dt {
+    color: tokens.$color-secondary;
+  }
+
+  dd {
+    margin: 0;
+    color: tokens.$color-primary;
+    font-weight: 700;
+    text-align: right;
+  }
+}
+
+@media (max-width: 760px) {
+  .detail-list {
+    gap: 11px;
+    padding: 12px;
+    background: rgba(tokens.$bg-primary, 0.05);
+  }
+
+  .detail-list__row {
+    font-size: 14px;
+  }
+}

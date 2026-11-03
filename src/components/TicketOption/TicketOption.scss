@@ -1,0 +1,67 @@
+@use '../../styles/variables' as tokens;
+
+.ticket-option {
+  display: grid;
+  min-height: 80px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 24px;
+  padding: 12px;
+  border-radius: 8px;
+  background: tokens.$surface-page;
+}
+
+.ticket-option__info {
+  max-width: 280px;
+}
+
+.ticket-option__name {
+  margin: 0;
+  color: tokens.$color-primary;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.ticket-option__description {
+  margin: 4px 0 0;
+  color: tokens.$color-tertiary;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.ticket-option__price {
+  color: tokens.$color-primary;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .ticket-option {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px 8px;
+    padding: 14px;
+    border-radius: 8px;
+  }
+
+  .ticket-option__info {
+    max-width: none;
+    grid-column: 1 / -1;
+  }
+
+  .ticket-option__name {
+    font-size: 14px;
+  }
+
+  .ticket-option__description {
+    margin-top: 14px;
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .ticket-option__price {
+    grid-row: 2;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 14px;
+  }
+}

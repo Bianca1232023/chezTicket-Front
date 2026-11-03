@@ -1,0 +1,154 @@
+@use '../variables' as tokens;
+
+.detalhes-evento {
+  min-height: calc(100vh - 69px);
+  padding-bottom: 80px;
+  background: tokens.$surface-page;
+}
+
+.detalhes-evento__container {
+  display: grid;
+  width: min(1280px, 100% - 160px);
+  grid-template-columns: minmax(0, 1fr) 400px;
+  align-items: start;
+  gap: 48px;
+  margin: 0 auto;
+  padding-top: 48px;
+}
+
+.detalhes-evento__content {
+  display: grid;
+  gap: 38px;
+}
+
+.detalhes-evento__heading {
+  margin: 0 0 15px;
+  color: tokens.$color-primary;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 28px;
+}
+
+.detalhes-evento__text {
+  margin: 0;
+  color: tokens.$color-primary;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.detalhes-evento__highlights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.detalhes-evento__aside {
+  position: sticky;
+  top: 24px;
+}
+
+.detalhes-evento__purchase {
+  display: grid;
+  gap: 24px;
+  padding: 32px;
+
+  .section-card__title {
+    font-size: 18px;
+    line-height: 20px;
+  }
+}
+
+.detalhes-evento__price {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.detalhes-evento__price-label {
+  color: tokens.$color-secondary;
+  font-size: 14px;
+}
+
+.detalhes-evento__price-value {
+  color: tokens.$bg-secondary;
+  font-family: 'Unbounded', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.detalhes-evento__note {
+  margin: 0;
+  color: tokens.$color-tertiary;
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .detalhes-evento {
+    padding-bottom: 32px;
+  }
+
+  .detalhes-evento__container {
+    width: calc(100% - 40px);
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    padding-top: 28px;
+  }
+
+  .detalhes-evento__content {
+    gap: 28px;
+  }
+
+  .detalhes-evento__heading {
+    margin-bottom: 14px;
+    font-size: 22px;
+  }
+
+  .detalhes-evento__text {
+    margin-top: 3px;
+    font-size: 14px;
+    line-height: 21px;
+  }
+
+  .detalhes-evento__highlights {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .detalhes-evento__aside {
+    position: static;
+  }
+
+  .detalhes-evento__purchase {
+    gap: 16px;
+    padding: 20px 16px 16px;
+
+    .section-card__title {
+      font-family: 'Manrope', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 22px;
+    }
+  }
+
+  .detalhes-evento__price {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .detalhes-evento__price-label {
+    line-height: 20px;
+  }
+
+  .detalhes-evento__price-value {
+    font-size: 22px;
+    line-height: 30px;
+  }
+
+  .detalhes-evento__note {
+    font-size: 13px;
+  }
+}

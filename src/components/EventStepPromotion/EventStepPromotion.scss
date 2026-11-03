@@ -1,0 +1,160 @@
+@use '../../styles/variables' as tokens;
+
+.event-step-promotion__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 337px;
+  align-items: start;
+  gap: 33px;
+}
+
+.event-step-promotion__social {
+  padding: 24px 26px 41px;
+
+  .event-panel__title {
+    margin-bottom: 22px;
+    font-size: 20px;
+  }
+}
+
+.event-step-promotion__links {
+  display: grid;
+  gap: 17px;
+}
+
+.event-step-promotion__image {
+  padding: 22px 28px 28px;
+
+  .event-panel__title {
+    margin-bottom: 28px;
+  }
+}
+
+.event-step-promotion__link {
+  margin-top: 23px;
+  padding: 36px 26px 30px;
+
+  .event-panel__title {
+    margin-bottom: 18px;
+  }
+}
+
+.event-step-promotion__text {
+  margin: 0;
+  color: tokens.$color-secondary;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.event-step-promotion__copy {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-top: 16px;
+
+  .event-input {
+    max-width: 523px;
+    flex: 1;
+    min-height: 44px;
+    background: tokens.$surface-page;
+    font-size: 13px;
+    font-weight: 500;
+  }
+}
+
+.event-step-promotion__copy .event-step-promotion__copy-button {
+  min-height: 48px;
+  padding: 0 31px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.event-step-promotion__share-title {
+  margin: 36px 0 8px;
+  color: tokens.$color-primary;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.event-step-promotion__share {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 34px;
+  margin-top: 22px;
+}
+
+.event-step-promotion__actions {
+  margin-top: 24px;
+}
+
+@media (max-width: 760px) {
+  .event-step-promotion__top {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  .event-step-promotion__social {
+    padding: 18px;
+
+    .event-panel__title {
+      margin-bottom: 8px;
+    }
+  }
+
+  .event-step-promotion__links {
+    gap: 12px;
+  }
+
+  .event-step-promotion__image {
+    padding: 18px;
+
+    .event-panel__title {
+      margin-bottom: 18px;
+    }
+  }
+
+  .event-step-promotion__link {
+    margin-top: 24px;
+    padding: 18px;
+
+    .event-panel__title {
+      margin-bottom: 14px;
+    }
+  }
+
+  .event-step-promotion__text {
+    font-size: 15px;
+  }
+
+  .event-step-promotion__copy {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+
+    .event-input {
+      max-width: none;
+      min-height: 47px;
+      background: tokens.$color-quaternary;
+    }
+  }
+
+  .event-step-promotion__copy .event-step-promotion__copy-button {
+    min-height: 48px;
+    font-size: 15px;
+  }
+
+  .event-step-promotion__share-title {
+    margin: 16px 0 12px;
+  }
+
+  .event-step-promotion__share {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 16px;
+    margin-top: 16px;
+  }
+
+  .event-step-promotion__actions {
+    margin-top: 24px;
+  }
+}

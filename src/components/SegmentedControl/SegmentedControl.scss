@@ -1,0 +1,50 @@
+@use '../../styles/variables' as tokens;
+
+.segmented-control {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.segmented-control__option {
+  height: 41px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background: tokens.$surface-page;
+  color: tokens.$color-tertiary;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid tokens.$bg-primary;
+    outline-offset: 2px;
+  }
+}
+
+.segmented-control__option--selected {
+  border-color: tokens.$bg-primary;
+  background: tokens.$color-quaternary;
+  color: tokens.$bg-primary;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .segmented-control {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .segmented-control__option {
+    height: 40px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .segmented-control__option--selected {
+    font-size: 14px;
+    font-weight: 700;
+  }
+}

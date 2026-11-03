@@ -1,0 +1,65 @@
+@use '../../styles/variables' as tokens;
+
+.icon-box {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  border: 1px solid tokens.$border-default;
+  border-radius: 4px;
+  background: tokens.$surface-page;
+  color: tokens.$bg-primary;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+}
+
+button.icon-box {
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid tokens.$bg-primary;
+    outline-offset: 2px;
+  }
+}
+
+.icon-box--action {
+  gap: 28px;
+}
+
+.icon-box__icon {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  stroke-width: 1.6;
+}
+
+@media (max-width: 760px) {
+  .icon-box {
+    min-height: 41px;
+    gap: 8px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+
+  .icon-box--action {
+    min-height: 48px;
+    gap: 8px;
+    justify-content: center;
+    border-color: tokens.$color-tertiary;
+    background: tokens.$color-quaternary;
+    color: tokens.$color-primary;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .icon-box--action .icon-box__icon {
+    color: tokens.$bg-primary;
+  }
+
+  .icon-box--info {
+    padding: 0 12px;
+    background: rgba(tokens.$color-tertiary, 0.06);
+  }
+}

@@ -1,0 +1,64 @@
+@use '../../styles/variables' as tokens;
+
+.page-title {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 14px;
+}
+
+.page-title__icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(tokens.$bg-primary, 0.3);
+  color: tokens.$bg-primary;
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.page-title__heading {
+  margin: 0;
+  color: tokens.$color-primary;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 32px;
+}
+
+.page-title__subtitle {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+  color: tokens.$color-primary;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.page-title__icon + .page-title__heading + .page-title__subtitle {
+  grid-column: 2;
+  margin-top: -4px;
+}
+
+@media (max-width: 760px) {
+  .page-title__icon + .page-title__heading + .page-title__subtitle {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+  }
+
+  .page-title__heading {
+    font-size: 22px;
+  }
+
+  .page-title__icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .page-title__subtitle {
+    font-size: 14px;
+  }
+}

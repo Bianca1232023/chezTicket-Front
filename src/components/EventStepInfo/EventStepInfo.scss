@@ -1,0 +1,74 @@
+@use '../../styles/variables' as tokens;
+
+.event-step-info {
+  .event-panel__header {
+    margin-bottom: 7px;
+  }
+
+  .event-panel__title {
+    font-size: 15px;
+  }
+}
+
+.event-step-info__form {
+  display: grid;
+  gap: 24px;
+}
+
+.event-step-info__datetime {
+  display: grid;
+  grid-template-columns: repeat(3, 200px);
+  gap: 18px;
+}
+
+.event-step-info__images {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 394px);
+  gap: 37px;
+}
+
+.event-step-info__form .event-step-info__map {
+  margin-top: -16px;
+}
+
+.event-step-info__actions {
+  margin-top: 16px;
+}
+
+@media (max-width: 760px) {
+  .event-step-info {
+    .event-panel__header {
+      margin-bottom: 4px;
+    }
+
+    .event-panel__title {
+      font-size: 14px;
+    }
+  }
+
+  .event-step-info__form {
+    gap: 20px;
+  }
+
+  .event-step-info__datetime {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 9px;
+  }
+
+  .event-step-info__datetime .event-step-info__date {
+    grid-column: 1 / -1;
+  }
+
+  .event-step-info__form .event-step-info__map {
+    margin-top: -4px;
+  }
+
+  .event-step-info__images {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .event-step-info__actions {
+    margin-top: 24px;
+  }
+}
