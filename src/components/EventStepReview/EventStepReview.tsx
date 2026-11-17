@@ -107,10 +107,16 @@ function EventStepReview({
     draft.socialLinks[network].trim(),
   )
   const linkReady = isPublished && savedEventId !== null
+  const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '')
+  const publicAppUrl =
+    import.meta.env.VITE_PUBLIC_APP_URL?.trim() || window.location.origin
   const eventLink = linkReady
-    ? new URL(routeHref('evento', { id: savedEventId }), window.location.href).href
+    ? new URL(
+        `${apiBaseUrl}/eventos/${savedEventId}/compartilhar`,
+        `${publicAppUrl.replace(/\/+$/, '')}/`,
+      ).href
     : ''
-  const shareText = `Confira o evento ${draft.name.trim()}: ${eventLink}`
+  const shareText = `Confira o evento ${draft.name.trim()}:\n${eventLink}`
 
   const handleCopyLink = async () => {
     try {
@@ -128,6 +134,21 @@ function EventStepReview({
   const openShareWindow = (url: string, platform: string) => {
     window.open(url, '_blank', 'noopener,noreferrer')
     setShareStatus(`Abrindo compartilhamento do ${platform}.`)
+  }
+
+  const handleWhatsAppShare = () => {
+    const hostname = new URL(eventLink).hostname.toLowerCase()
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]') {
+      setShareStatus(
+        'Configure VITE_PUBLIC_APP_URL com o endereço público do site para compartilhar o evento.',
+      )
+      return
+    }
+
+    openShareWindow(
+      `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+      'WhatsApp',
+    )
   }
 
   const handleInstagramShare = async () => {
@@ -246,6 +267,12 @@ function EventStepReview({
             className="event-step-review__tickets"
           >
             <EventTicketTable rows={ticketRows} />
+            <div className="event-step-review__coupon">
+              <strong>Cupom de desconto</strong>
+              {draft.couponEnabled
+                ? <span>{draft.couponDiscountPercent}% · código {draft.couponCode || 'não informado'}</span>
+                : <span>Não oferecer cupom</span>}
+            </div>
           </EventPanel>
 
           <EventPanel
@@ -306,12 +333,7 @@ function EventStepReview({
                 <div className="event-step-review__share">
                   <EventShareButton
                     network="whatsapp"
-                    onClick={() =>
-                      openShareWindow(
-                        `https://wa.me/?text=${encodeURIComponent(shareText)}`,
-                        'WhatsApp',
-                      )
-                    }
+                    onClick={handleWhatsAppShare}
                   >
                     WhatsApp
                   </EventShareButton>

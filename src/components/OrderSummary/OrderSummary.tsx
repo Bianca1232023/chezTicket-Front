@@ -1,4 +1,5 @@
 import Icon from '../Icon/Icon'
+import Button from '../Button/Button'
 import LinkButton from '../LinkButton/LinkButton'
 import './OrderSummary.scss'
 
@@ -19,6 +20,8 @@ type OrderSummaryProps = {
   ctaLabel: string
   ctaHref: string
   note: string
+  onCtaClick?: () => void
+  ctaDisabled?: boolean
 }
 
 function OrderSummary({
@@ -33,6 +36,8 @@ function OrderSummary({
   ctaLabel,
   ctaHref,
   note,
+  onCtaClick,
+  ctaDisabled = false,
 }: OrderSummaryProps) {
   return (
     <section className="order-summary">
@@ -57,7 +62,13 @@ function OrderSummary({
         <span className="order-summary__total-label">{totalLabel}</span>
         <strong className="order-summary__total-value">{totalValue}</strong>
       </div>
-      <LinkButton href={ctaHref}>{ctaLabel}</LinkButton>
+      {onCtaClick ? (
+        <Button type="button" onClick={onCtaClick} disabled={ctaDisabled}>
+          {ctaLabel}
+        </Button>
+      ) : (
+        <LinkButton href={ctaHref}>{ctaLabel}</LinkButton>
+      )}
       <p className="order-summary__note">
         <Icon name="lock" className="order-summary__note-icon" />
         {note}

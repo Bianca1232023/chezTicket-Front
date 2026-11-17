@@ -1,9 +1,11 @@
+import { useState, type FormEvent } from 'react'
 import AuthLayout from '../../components/AuthLayout/AuthLayout'
 import AuthSwitch from '../../components/AuthSwitch/AuthSwitch'
 import Button from '../../components/Button/Button'
 import CheckboxField from '../../components/CheckboxField/CheckboxField'
-import GoogleButton from '../../components/GoogleButton/GoogleButton'
 import TextField from '../../components/TextField/TextField'
+import { useAuth } from '../../context/AuthContext'
+import { navigate, useRoute } from '../../hooks/useRoute'
 import '../../styles/pages/register.scss'
 
 type RegisterProps = {
@@ -11,18 +13,52 @@ type RegisterProps = {
 }
 
 function Register({ onNavigateToLogin }: RegisterProps) {
+  const { register } = useAuth()
+  const currentRoute = useRoute()
+  const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setError(null)
+    const form = new FormData(event.currentTarget)
+    const senha = String(form.get('register-password'))
+    if (senha !== String(form.get('confirm-password'))) {
+      setError('As senhas informadas não coincidem.')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      await register({
+        nome: String(form.get('full-name')),
+        email: String(form.get('register-email')),
+        senha,
+        cpf: String(form.get('register-cpf')),
+      })
+      navigate(currentRoute === 'cadastro' ? 'perfil' : currentRoute)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Não foi possível criar a conta.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <AuthLayout
       title="Bem vindo de Volta"
       subtitle="Cadastre a sua conta para continuar"
       variant="register"
     >
-      <form className="auth-form" onSubmit={(event) => event.preventDefault()}>
+      <form className="auth-form" onSubmit={submit}>
         <TextField
           id="full-name"
           label="Nome completo:"
           placeholder="Digite seu nome"
           icon="email"
+          autoComplete="name"
+          maxLength={120}
+          required
         />
         <TextField
           id="register-email"
@@ -30,6 +66,19 @@ function Register({ onNavigateToLogin }: RegisterProps) {
           placeholder="Digite seu email"
           type="email"
           icon="email"
+          autoComplete="email"
+          maxLength={180}
+          required
+        />
+        <TextField
+          id="register-cpf"
+          label="CPF:"
+          placeholder="Somente números"
+          icon="email"
+          inputMode="numeric"
+          pattern="[0-9]{11}"
+          maxLength={11}
+          required
         />
         <TextField
           id="register-password"
@@ -37,6 +86,10 @@ function Register({ onNavigateToLogin }: RegisterProps) {
           placeholder="Digite sua senha"
           type="password"
           icon="lock"
+          autoComplete="new-password"
+          minLength={8}
+          maxLength={72}
+          required
         />
         <TextField
           id="confirm-password"
@@ -44,13 +97,19 @@ function Register({ onNavigateToLogin }: RegisterProps) {
           placeholder="Digite sua senha"
           type="password"
           icon="lock"
+          autoComplete="new-password"
+          minLength={8}
+          maxLength={72}
+          required
         />
         <CheckboxField className="terms-row">
           Aceitar termos de uso e{' '}
           <span className="text-link">políticas de privacidade</span>
         </CheckboxField>
-        <Button>Cadastrar</Button>
-        <GoogleButton />
+        {error && <p className="auth-form__error" role="alert">{error}</p>}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Cadastrando...' : 'Cadastrar'}
+        </Button>
       </form>
       <AuthSwitch
         text="Já tem uma conta?"

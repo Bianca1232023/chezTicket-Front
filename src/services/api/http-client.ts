@@ -4,6 +4,7 @@ type RequestOptions = {
   method?: string
   body?: BodyInit
   contentType?: string
+  allowNoContent?: boolean
 }
 
 export class ApiError extends Error {
@@ -49,6 +50,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   try {
     response = await fetch(url, {
       method: options.method,
+      credentials: 'same-origin',
       headers: {
         Accept: 'application/json',
         ...(options.contentType ? { 'Content-Type': options.contentType } : {}),
@@ -85,7 +87,12 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     )
   }
 
-  if (response.status === 204 || payload === null) {
+  if (response.status === 204) {
+    if (options.allowNoContent) return undefined as T
+    throw new ApiError('A API não retornou os dados esperados.', response.status)
+  }
+
+  if (payload === null) {
     throw new ApiError('A API não retornou os dados esperados.', response.status)
   }
 
@@ -103,6 +110,9 @@ export const apiPost = <T>(path: string, body: unknown) =>
 
 export const apiPostEmpty = <T>(path: string) =>
   request<T>(path, { method: 'POST' })
+
+export const apiDeleteEmpty = (path: string) =>
+  request<void>(path, { method: 'DELETE', allowNoContent: true })
 
 export const apiPostMultipart = <T>(path: string, body: FormData) =>
   request<T>(path, {

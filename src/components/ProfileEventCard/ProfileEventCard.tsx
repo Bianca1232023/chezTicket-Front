@@ -9,6 +9,8 @@ type ProfileEventCardProps = {
   image: string
   compactImage?: string
   href?: string
+  onDelete?: () => void
+  isDeleting?: boolean
 }
 
 function ProfileEventCard({
@@ -19,6 +21,8 @@ function ProfileEventCard({
   image,
   compactImage,
   href,
+  onDelete,
+  isDeleting = false,
 }: ProfileEventCardProps) {
   const content = (
     <>
@@ -45,12 +49,26 @@ function ProfileEventCard({
     </>
   )
 
-  return href ? (
-    <a className="profile-event-card" href={href}>
-      {content}
-    </a>
-  ) : (
-    <article className="profile-event-card">{content}</article>
+  return (
+    <article className="profile-event-card">
+      {href ? (
+        <a className="profile-event-card__link" href={href}>
+          {content}
+        </a>
+      ) : content}
+      {onDelete && (
+        <button
+          className="profile-event-card__delete"
+          type="button"
+          aria-label={`Excluir evento ${title}`}
+          title="Excluir evento"
+          disabled={isDeleting}
+          onClick={onDelete}
+        >
+          <Icon name="trash" />
+        </button>
+      )}
+    </article>
   )
 }
 

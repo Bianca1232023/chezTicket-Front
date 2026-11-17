@@ -140,6 +140,13 @@
   }
 }
 
+.header__logout {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
 .header__avatar {
   display: grid;
   width: 46px;

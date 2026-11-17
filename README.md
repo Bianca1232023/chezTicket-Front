@@ -21,7 +21,12 @@ Sem a chave, a tela oferece um link para abrir o endereço no Google Maps.
 
 Em produção, defina `VITE_API_BASE_URL` com a URL da API terminada em `/api` e configure o
 backend para permitir a origem do frontend via CORS. O proxy do Vite existe apenas para
-desenvolvimento. A criação de eventos e o fluxo de compra ainda não estão conectados.
+desenvolvimento. Defina também `VITE_PUBLIC_APP_URL` com a origem pública do frontend
+(por exemplo, `https://chezticket.com.br`) para gerar links de eventos compartilháveis. Sem
+essa variável, é usada a origem atual; links gerados em `localhost` não podem ser compartilhados
+com outras pessoas. Para gerar a prévia com a imagem de divulgação, a API também precisa estar
+publicamente acessível e configurada com `CHEZTICKET_FRONTEND_URL` (origem do frontend) e
+`CHEZTICKET_PUBLIC_API_URL` (origem da API, sem o sufixo `/api`).
 
 Currently, two official plugins are available:
 

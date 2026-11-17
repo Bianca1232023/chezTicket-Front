@@ -10,10 +10,51 @@
   box-shadow: 0 2px 4px rgba(tokens.$color-primary, 0.25);
   color: inherit;
   text-decoration: none;
+}
+
+.profile-event-card__link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
 
   &:focus-visible {
     outline: 2px solid tokens.$bg-primary;
     outline-offset: 3px;
+  }
+}
+
+.profile-event-card__delete {
+  position: absolute;
+  z-index: 1;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid tokens.$border-default;
+  border-radius: 6px;
+  background: tokens.$color-quaternary;
+  color: tokens.$feedback-danger;
+  cursor: pointer;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover:not(:disabled) {
+    background: tokens.$surface-muted;
+  }
+
+  &:focus-visible {
+    outline: 2px solid tokens.$feedback-danger;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.6;
   }
 }
 

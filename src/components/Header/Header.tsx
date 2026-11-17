@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import logo from '../../assets/chezticket-logo.png'
-import { routeHref, type Route } from '../../hooks/useRoute'
+import { useAuth } from '../../context/AuthContext'
+import { navigate, routeHref } from '../../hooks/useRoute'
 import Icon from '../Icon/Icon'
 import './Header.scss'
 
@@ -8,15 +10,37 @@ export type HeaderNavItem = 'criar-evento' | 'meus-eventos' | 'meus-ingressos'
 type HeaderProps = {
   // Item de navegação destacado como página atual. Sem valor, só "Criar evento" recebe ênfase.
   active?: HeaderNavItem
+  searchValue?: string
+  onSearchChange?: (value: string) => void
 }
 
-const navItems: { id: HeaderNavItem; label: string; route: Route }[] = [
-  { id: 'criar-evento', label: 'Criar evento', route: 'criar-evento' },
-  { id: 'meus-eventos', label: 'Meus Eventos', route: 'perfil' },
-  { id: 'meus-ingressos', label: 'Meus ingressos', route: 'perfil' },
+const navItems: { id: HeaderNavItem; label: string; href: string }[] = [
+  { id: 'criar-evento', label: 'Criar evento', href: routeHref('criar-evento') },
+  {
+    id: 'meus-eventos',
+    label: 'Meus Eventos',
+    href: routeHref('perfil', { tab: 'meus-eventos' }),
+  },
+  {
+    id: 'meus-ingressos',
+    label: 'Meus ingressos',
+    href: routeHref('perfil', { tab: 'meus-ingressos' }),
+  },
 ]
 
-function Header({ active }: HeaderProps) {
+function Header({ active, searchValue, onSearchChange }: HeaderProps) {
+  const { user, logout } = useAuth()
+  const [localSearchValue, setLocalSearchValue] = useState('')
+  const searchInputValue = searchValue ?? localSearchValue
+
+  const handleSearchChange = (value: string) => {
+    if (onSearchChange) {
+      onSearchChange(value)
+    } else {
+      setLocalSearchValue(value)
+    }
+  }
+
   return (
     <header className="header">
       <a className="header__logo" href={routeHref('home')}>
@@ -28,7 +52,11 @@ function Header({ active }: HeaderProps) {
         <span>Rio de Janeiro</span>
       </p>
 
-      <a className="header__avatar" href={routeHref('perfil')} aria-label="Meu perfil">
+      <a
+        className="header__avatar"
+        href={routeHref(user ? 'perfil' : 'login')}
+        aria-label={user ? `Meu perfil: ${user.nome}` : 'Entrar'}
+      >
         <Icon name="user" />
       </a>
 
@@ -38,7 +66,13 @@ function Header({ active }: HeaderProps) {
         onSubmit={(event) => event.preventDefault()}
       >
         <Icon name="search" className="header__search-icon" />
-        <input type="search" placeholder="Busque por eventos ou Lugares" />
+        <input
+          type="search"
+          value={searchInputValue}
+          onChange={(event) => handleSearchChange(event.currentTarget.value)}
+          placeholder="Busque por eventos ou Lugares"
+          aria-label="Buscar eventos"
+        />
         <div className="header__location">
           <Icon name="pin" />
           <span>Rio de Janeiro</span>
@@ -58,13 +92,24 @@ function Header({ active }: HeaderProps) {
             <a
               key={item.id}
               className={`header__link${isActive ? ' is-active' : ''}${isEmphasis ? ' is-emphasis' : ''}`}
-              href={routeHref(item.route)}
+              href={item.href}
               aria-current={isActive ? 'page' : undefined}
             >
               {item.label}
             </a>
           )
         })}
+        {user ? (
+          <button
+            className="header__link header__logout"
+            type="button"
+            onClick={() => void logout().catch(() => undefined).finally(() => navigate('login'))}
+          >
+            Sair
+          </button>
+        ) : (
+          <a className="header__link" href={routeHref('login')}>Entrar</a>
+        )}
       </nav>
     </header>
   )

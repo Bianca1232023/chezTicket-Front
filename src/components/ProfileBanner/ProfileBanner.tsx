@@ -4,8 +4,8 @@ import './ProfileBanner.scss'
 
 type ProfileBannerProps = {
   name: string
-  location: string
-  actionLabel: string
+  location?: string
+  actionLabel?: string
   onAction?: () => void
   topImage: string
   baseImage: string
@@ -45,15 +45,19 @@ function ProfileBanner({
 
       <div className="profile-banner__info">
         <h1 className="profile-banner__name">{name}</h1>
-        <p className="profile-banner__location">
-          <Icon name="pin" />
-          {location}
-        </p>
+        {location && (
+          <p className="profile-banner__location">
+            <Icon name="pin" />
+            {location}
+          </p>
+        )}
       </div>
 
-      <button className="profile-banner__action" type="button" onClick={onAction}>
-        {actionLabel}
-      </button>
+      {actionLabel && onAction && (
+        <button className="profile-banner__action" type="button" onClick={onAction}>
+          {actionLabel}
+        </button>
+      )}
     </section>
   )
 }

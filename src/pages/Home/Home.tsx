@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import CategoryBar from '../../components/CategoryBar/CategoryBar'
-import { CategoryIcon } from '../../components/CategoryBar/CategoryIcon'
+import {
+  CategoryIcon,
+  categoryIconForSlug,
+} from '../../components/CategoryBar/CategoryIcon'
 import Carousel from '../../components/Carousel/Carousel'
 import EventPosterCard from '../../components/EventPosterCard/EventPosterCard'
 import FeatureStrip from '../../components/FeatureStrip/FeatureStrip'
@@ -44,7 +47,7 @@ function Home() {
     ...categories.map((category) => ({
       id: String(category.id),
       label: category.nome,
-      icon: <CategoryIcon name="layers" />,
+      icon: <CategoryIcon name={categoryIconForSlug(category.slug)} />,
     })),
   ]
   const filteredEvents =
@@ -100,9 +103,6 @@ function Home() {
         <section className="home-page__section home-page__section--trending">
           <div className="home-page__section-heading">
             <h2>Eventos publicados</h2>
-            <a href="#/explorar">
-              Ver todos os eventos <Icon name="arrow-right" />
-            </a>
           </div>
           {eventsQuery.isLoading ? (
             <p className="home-page__empty" role="status">Carregando eventos...</p>

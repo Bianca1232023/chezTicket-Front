@@ -30,6 +30,54 @@
   margin-top: 16px;
 }
 
+.event-step-tickets__coupon-panel {
+  margin-top: 20px;
+}
+
+.event-step-tickets__coupon-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  legend {
+    width: 100%;
+    margin-bottom: 12px;
+    color: tokens.$color-primary;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: tokens.$color-secondary;
+    cursor: pointer;
+  }
+
+  input {
+    accent-color: tokens.$bg-primary;
+  }
+}
+
+.event-step-tickets__coupon-fields {
+  display: grid;
+  max-width: 720px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.event-step-tickets__coupon-error {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: tokens.$feedback-danger;
+  font-size: 13px;
+}
+
 @media (max-width: 760px) {
   .event-step-tickets {
     padding: 0;
@@ -54,5 +102,20 @@
 
   .event-step-tickets__actions {
     margin-top: 16px;
+  }
+
+  .event-step-tickets__coupon-panel {
+    margin-top: 16px;
+  }
+
+  .event-step-tickets__coupon-choice {
+    legend {
+      font-size: 14px;
+    }
+  }
+
+  .event-step-tickets__coupon-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
   }
 }

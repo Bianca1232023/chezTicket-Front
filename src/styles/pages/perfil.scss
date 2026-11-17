@@ -40,6 +40,17 @@
   margin-bottom: 25px;
 }
 
+.perfil__invoice-notice {
+  margin: -14px 0 24px;
+  color: tokens.$color-secondary;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.perfil__invoice-link {
+  white-space: nowrap;
+}
+
 .perfil__events {
   display: flex;
   flex-wrap: wrap;
@@ -141,6 +152,10 @@
 
   .perfil__section--history .perfil__section-title {
     margin-bottom: 18px;
+  }
+
+  .perfil__invoice-notice {
+    margin: -6px 0 18px;
   }
 
   .perfil .data-table td:last-child {

@@ -149,6 +149,19 @@
   }
 }
 
+.event-step-review__coupon {
+  display: grid;
+  gap: 5px;
+  margin: 18px 4px 0;
+  color: tokens.$color-secondary;
+  font-size: 13px;
+
+  strong {
+    color: tokens.$color-primary;
+    font-weight: 600;
+  }
+}
+
 .event-step-review__promotion {
   padding: 18px 15px 18px 14px;
 

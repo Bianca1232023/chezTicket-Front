@@ -1,15 +1,15 @@
-import type { ReactNode } from 'react'
+import type { InputHTMLAttributes, ReactNode } from 'react'
 import './CheckboxField.scss'
 
-type CheckboxFieldProps = {
+type CheckboxFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'className'> & {
   children: ReactNode
   className?: string
 }
 
-function CheckboxField({ children, className }: CheckboxFieldProps) {
+function CheckboxField({ children, className, ...inputProps }: CheckboxFieldProps) {
   return (
     <label className={['check-row', className].filter(Boolean).join(' ')}>
-      <input type="checkbox" />
+      <input type="checkbox" {...inputProps} />
       <span>{children}</span>
     </label>
   )
