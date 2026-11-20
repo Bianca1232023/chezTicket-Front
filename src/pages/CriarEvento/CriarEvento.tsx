@@ -7,6 +7,7 @@ import EventStepPromotion from '../../components/EventStepPromotion/EventStepPro
 import EventStepReview from '../../components/EventStepReview/EventStepReview'
 import type { EventDraft } from '../../types/event-draft'
 import type { CreateCompleteEventRequest } from '../../types/api'
+import { useAuth } from '../../context/AuthContext'
 import coverImage from '../../assets/criar-evento/capa-evento-formulario.png'
 import { useCreateEvent } from '../../hooks/useCreateEvent'
 import '../../styles/pages/criar-evento.scss'
@@ -45,6 +46,9 @@ const createInitialDraft = (): EventDraft => ({
   coverFile: null,
   coverPreviewUrl: coverImage,
   tags: ['Evento', 'ao vivo', 'Tecnologia'],
+  couponEnabled: false,
+  couponDiscountPercent: '10',
+  couponCode: '',
   tickets: [
     {
       name: 'Ingresso Padrão',
@@ -99,8 +103,10 @@ function CriarEvento() {
   const [isPublished, setIsPublished] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitMessage, setSubmitMessage] = useState<string | null>(null)
+  const [couponError, setCouponError] = useState<string | null>(null)
   const submitLock = useRef(false)
   const createEvent = useCreateEvent()
+  const { user } = useAuth()
   const { title, subtitle } = headings[step]
 
   useEffect(() => {
@@ -138,12 +144,38 @@ function CriarEvento() {
     setStep(Math.min(Math.max(target, 0), steps.length - 1))
     window.scrollTo({ top: 0 })
   }
-  const next = () => goTo(step + 1)
+  const getCouponValidationError = () => {
+    if (!draft.couponEnabled) return null
+
+    const discount = Number(draft.couponDiscountPercent)
+    if (!Number.isInteger(discount) || discount < 1 || discount > 100) {
+      return 'Informe um desconto entre 1% e 100%.'
+    }
+    if (!/^[A-Za-z0-9]{8}$/.test(draft.couponCode)) {
+      return 'O código do cupom deve conter exatamente 8 caracteres alfanuméricos.'
+    }
+    return null
+  }
+  const next = () => {
+    if (step === 1) {
+      const error = getCouponValidationError()
+      setCouponError(error)
+      if (error) return
+    }
+    goTo(step + 1)
+  }
   const back = () => goTo(step - 1)
 
   const submit = async (publicar: boolean) => {
     setSubmitError(null)
     setSubmitMessage(null)
+    const couponValidationError = getCouponValidationError()
+    if (couponValidationError) {
+      setCouponError(couponValidationError)
+      setSubmitError(couponValidationError)
+      goTo(1)
+      return
+    }
 
     const start = draft.startDate && draft.startTime
       ? `${draft.startDate}T${draft.startTime}:00`
@@ -236,7 +268,7 @@ function CriarEvento() {
     )
 
     const request: CreateCompleteEventRequest = {
-      organizadorId: 2,
+      organizadorId: user?.id ?? 0,
       categoriaId: Number(draft.categoryId),
       titulo: draft.name.trim(),
       descricao: draft.description.trim(),
@@ -247,6 +279,12 @@ function CriarEvento() {
       fim: end,
       tags: draft.tags,
       redesSociais: socialLinks,
+      cupom: draft.couponEnabled
+        ? {
+          codigo: draft.couponCode,
+          percentualDesconto: Number(draft.couponDiscountPercent),
+        }
+        : null,
       ingressos: tickets,
       publicar,
     }
@@ -304,8 +342,16 @@ function CriarEvento() {
             <div hidden={step !== 1}>
               <EventStepTickets
                 tickets={draft.tickets}
+                couponEnabled={draft.couponEnabled}
+                couponDiscountPercent={draft.couponDiscountPercent}
+                couponCode={draft.couponCode}
+                couponError={couponError}
                 onTicketChange={updateTicket}
                 onTicketRemove={removeTicket}
+                onCouponChange={(updates) => {
+                  setCouponError(null)
+                  updateDraft(updates)
+                }}
                 onBack={back}
                 onNext={next}
               />

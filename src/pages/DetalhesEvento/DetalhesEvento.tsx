@@ -8,7 +8,7 @@ import DetailList from '../../components/DetailList/DetailList'
 import LinkButton from '../../components/LinkButton/LinkButton'
 import { useCategories } from '../../hooks/useCategories'
 import { useEventDetails } from '../../hooks/useEventDetails'
-import { useRouteParam } from '../../hooks/useRoute'
+import { routeHref, useRouteParam } from '../../hooks/useRoute'
 import '../../styles/pages/detalhes-evento.scss'
 
 const formatCurrency = (amount: number) =>
@@ -179,7 +179,14 @@ function DetalhesEvento() {
                 <strong className="detalhes-evento__price-value">{priceLabel}</strong>
               </div>
               {availableTickets.length > 0 && (
-                <LinkButton href="#/compra">Garantir Ingresso</LinkButton>
+                <LinkButton
+                  href={routeHref('compra', {
+                    eventoId: event.id,
+                    sessaoId: selectedSession?.id ?? '',
+                  })}
+                >
+                  Garantir Ingresso
+                </LinkButton>
               )}
               {categoriesQuery.isError && (
                 <p className="detalhes-evento__note" role="alert">

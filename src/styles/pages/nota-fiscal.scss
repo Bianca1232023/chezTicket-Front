@@ -24,6 +24,27 @@
   margin-top: 20px;
 }
 
+.nota-fiscal__disclaimer {
+  margin: 12px 0 0 16px;
+  color: tokens.$feedback-danger;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.nota-fiscal__back {
+  display: inline-flex;
+  margin: 12px 0 0 16px;
+}
+
+.nota-fiscal__message {
+  margin: 0;
+  padding: 24px;
+  border: 1px solid tokens.$border-default;
+  border-radius: 12px;
+  background: tokens.$color-quaternary;
+  color: tokens.$color-primary;
+}
+
 .nota-fiscal .nota-fiscal__invoice {
   display: flex;
   min-width: 0;
@@ -33,9 +54,33 @@
 }
 
 .nota-fiscal__invoice-head {
+  position: relative;
   display: flex;
+  min-height: 150px;
   flex-direction: column;
   align-items: flex-start;
+  padding-right: 140px;
+}
+
+.nota-fiscal__qr {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: tokens.$color-tertiary;
+  font-size: 11px;
+  text-align: center;
+
+  svg {
+    display: block;
+    padding: 8px;
+    border: 1px solid tokens.$border-default;
+    border-radius: 12px;
+    background: tokens.$color-quaternary;
+  }
 }
 
 .nota-fiscal__number {
@@ -94,6 +139,13 @@
   font-size: 16px;
 }
 
+.nota-fiscal__download-error {
+  margin: 0;
+  color: tokens.$feedback-danger;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .nota-fiscal__download {
   height: 42px;
 }
@@ -146,6 +198,14 @@
     }
   }
 
+  .nota-fiscal__disclaimer {
+    margin-left: 0;
+  }
+
+  .nota-fiscal__back {
+    margin-left: 0;
+  }
+
   .nota-fiscal__layout {
     grid-template-columns: minmax(0, 1fr);
     gap: 22px;
@@ -155,6 +215,16 @@
   .nota-fiscal .nota-fiscal__invoice {
     gap: 18px;
     padding: 18px;
+  }
+
+  .nota-fiscal__invoice-head {
+    min-height: 0;
+    padding-right: 0;
+  }
+
+  .nota-fiscal__qr {
+    position: static;
+    margin: 14px auto 0;
   }
 
   .nota-fiscal__number {

@@ -4,16 +4,23 @@ import EventInput from '../EventInput/EventInput'
 import EventTicketCard from '../EventTicketCard/EventTicketCard'
 import EventFormActions from '../EventFormActions/EventFormActions'
 import Icon from '../Icon/Icon'
-import type { EventTicketDraft } from '../../types/event-draft'
+import type { EventDraft, EventTicketDraft } from '../../types/event-draft'
 import './EventStepTickets.scss'
 
 type EventStepTicketsProps = {
   tickets: EventTicketDraft[]
+  couponEnabled: boolean
+  couponDiscountPercent: string
+  couponCode: string
+  couponError: string | null
   onTicketChange: (
     index: number,
     updates: Partial<EventTicketDraft>,
   ) => void
   onTicketRemove: (index: number) => void
+  onCouponChange: (
+    updates: Partial<Pick<EventDraft, 'couponEnabled' | 'couponDiscountPercent' | 'couponCode'>>,
+  ) => void
   onBack: () => void
   onNext: () => void
 }
@@ -77,8 +84,13 @@ function DateInput({
 
 function EventStepTickets({
   tickets,
+  couponEnabled,
+  couponDiscountPercent,
+  couponCode,
+  couponError,
   onTicketChange,
   onTicketRemove,
+  onCouponChange,
   onBack,
   onNext,
 }: EventStepTicketsProps) {
@@ -196,6 +208,80 @@ function EventStepTickets({
           <p className="event-step-tickets__remove-notice" role="note">
             Mantenha ao menos um tipo de ingresso para continuar.
           </p>
+        )}
+      </EventPanel>
+
+      <EventPanel title="Cupom de desconto" className="event-step-tickets__coupon-panel">
+        <fieldset className="event-step-tickets__coupon-choice">
+          <legend>Deseja oferecer um cupom para este evento?</legend>
+          <label>
+            <input
+              type="radio"
+              name="coupon-enabled"
+              checked={couponEnabled}
+              onChange={() => onCouponChange({ couponEnabled: true })}
+            />
+            Sim
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="coupon-enabled"
+              checked={!couponEnabled}
+              onChange={() => onCouponChange({ couponEnabled: false })}
+            />
+            Não
+          </label>
+        </fieldset>
+
+        {couponEnabled && (
+          <div className="event-step-tickets__coupon-fields">
+            <EventField label="Desconto (%)" htmlFor="coupon-discount" variant="muted">
+              <EventInput
+                id="coupon-discount"
+                type="number"
+                min={1}
+                max={100}
+                step={1}
+                value={couponDiscountPercent}
+                onChange={(event) =>
+                  onCouponChange({ couponDiscountPercent: event.target.value })
+                }
+              />
+            </EventField>
+            <EventField
+              label="Código do cupom (8 caracteres alfanuméricos)"
+              htmlFor="coupon-code"
+              variant="muted"
+            >
+              <EventInput
+                id="coupon-code"
+                type="text"
+                inputMode="text"
+                autoCapitalize="characters"
+                autoComplete="off"
+                maxLength={8}
+                pattern="[A-Za-z0-9]{8}"
+                placeholder="Ex.: AB12CD34"
+                value={couponCode}
+                aria-invalid={Boolean(couponError)}
+                aria-describedby={couponError ? 'coupon-error' : undefined}
+                onChange={(event) =>
+                  onCouponChange({
+                    couponCode: event.target.value
+                      .replace(/[^a-zA-Z0-9]/g, '')
+                      .slice(0, 8)
+                      .toUpperCase(),
+                  })
+                }
+              />
+            </EventField>
+            {couponError && (
+              <p id="coupon-error" className="event-step-tickets__coupon-error" role="alert">
+                {couponError}
+              </p>
+            )}
+          </div>
         )}
       </EventPanel>
 

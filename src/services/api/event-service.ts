@@ -1,4 +1,4 @@
-import { apiGet, apiPostEmpty, apiPostMultipart } from './http-client'
+import { apiDeleteEmpty, apiGet, apiPostEmpty, apiPostMultipart } from './http-client'
 import type {
   ApiCreatedEvent,
   ApiEvent,
@@ -41,4 +41,7 @@ export const eventService = {
 
   publish: (id: number) =>
     apiPostEmpty<ApiEvent>(`/eventos/${encodeURIComponent(id)}/publicacao`),
+
+  remove: (id: number) =>
+    apiDeleteEmpty(`/eventos/${encodeURIComponent(id)}`),
 }

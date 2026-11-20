@@ -22,6 +22,9 @@ export type EventDraft = {
   coverPreviewUrl: string
   tags: string[]
   tickets: EventTicketDraft[]
+  couponEnabled: boolean
+  couponDiscountPercent: string
+  couponCode: string
   socialLinks: {
     instagram: string
     facebook: string

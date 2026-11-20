@@ -24,33 +24,20 @@
   top: 20px;
   right: 28px;
   display: flex;
-  width: 38px;
-  flex-wrap: wrap;
+  align-items: flex-start;
   justify-content: center;
 }
 
-.payment-card__circle {
+.payment-card__brand-logo {
   display: block;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-}
-
-.payment-card__circle--red {
-  background: #eb001b;
-}
-
-.payment-card__circle--orange {
-  margin-left: -6px;
-  background: #f79e1b;
-  opacity: 0.95;
+  width: 64px;
+  max-height: 30px;
+  object-fit: contain;
 }
 
 .payment-card__brand-name {
-  width: 100%;
-  margin-top: 1px;
-  font-size: 6px;
-  line-height: 7px;
+  font-size: 9px;
+  font-weight: 700;
   text-align: center;
 }
 

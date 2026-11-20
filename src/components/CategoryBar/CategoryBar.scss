@@ -1,10 +1,11 @@
 @use '../../styles/variables' as tokens;
 
 .category-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  gap: 8px;
   min-height: 59px;
   align-items: center;
-  justify-content: space-around;
   padding: 9px 12px;
   border: 1px solid tokens.$color-tertiary;
   border-radius: 14px;
@@ -12,12 +13,51 @@
   box-shadow: 0 4px 6px rgba(tokens.$color-primary, 0.25);
 }
 
+.category-bar__items {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.category-bar__arrow {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: tokens.$bg-primary;
+  cursor: pointer;
+
+  svg,
+  img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  &:focus-visible {
+    outline: 2px solid tokens.$bg-primary;
+    outline-offset: 2px;
+  }
+}
+
 .category-bar__item {
   display: flex;
-  height: 40px;
+  min-width: 0;
+  min-height: 40px;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 0 15px;
+  padding: 4px 8px;
   border: 0;
   border-radius: 4px;
   background: transparent;
@@ -44,23 +84,29 @@
   flex: 0 0 auto;
   place-items: center;
 
-  svg {
+  svg,
+  img {
     width: 24px;
     height: 24px;
+    object-fit: contain;
   }
 }
 
-.category-bar__item.is-active .category-bar__icon svg {
+.category-bar__label {
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.category-bar__item.is-active .category-bar__icon svg,
+.category-bar__item.is-active .category-bar__icon img {
   width: 17px;
   height: 17px;
 }
 
 @media (max-width: 760px) {
   .category-bar {
+    display: block;
     min-height: 0;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 12px 8px;
     padding: 0;
     border: 0;
     border-radius: 0;
@@ -68,19 +114,50 @@
     box-shadow: none;
   }
 
-  .category-bar__item {
-    height: 38px;
+  .category-bar__items {
+    display: flex;
+    width: 100%;
     gap: 8px;
-    padding: 0 12px;
+    overflow-x: auto;
+    padding: 2px 0 8px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .category-bar__arrow {
+    display: none;
+  }
+
+  .category-bar__item {
+    flex: 0 0 calc((100% - 16px) / 3);
+    flex-direction: column;
+    min-height: 62px;
+    gap: 8px;
+    scroll-snap-align: start;
+  }
+
+  .category-bar__label {
+    text-align: center;
+  }
+
+  .category-bar__item {
+    padding: 6px 4px;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 12px;
   }
 
   .category-bar__item.is-active {
     font-weight: 500;
   }
 
-  .category-bar__item.is-active .category-bar__icon svg {
+  .category-bar__item.is-active .category-bar__icon svg,
+  .category-bar__item.is-active .category-bar__icon img {
     width: 20px;
     height: 20px;
   }

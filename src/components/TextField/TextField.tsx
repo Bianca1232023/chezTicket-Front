@@ -1,8 +1,9 @@
 import './TextField.scss'
+import type { InputHTMLAttributes } from 'react'
 
 type FieldIconName = 'email' | 'lock'
 
-type TextFieldProps = {
+type TextFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'id' | 'name' | 'placeholder'> & {
   id: string
   label: string
   placeholder: string
@@ -32,13 +33,14 @@ function TextField({
   placeholder,
   type = 'text',
   icon,
+  ...inputProps
 }: TextFieldProps) {
   return (
     <div className="auth-field">
       <label htmlFor={id}>{label}</label>
       <div className="auth-input-wrap">
         <FieldIcon name={icon} />
-        <input id={id} name={id} type={type} placeholder={placeholder} />
+        <input id={id} name={id} type={type} placeholder={placeholder} {...inputProps} />
       </div>
     </div>
   )

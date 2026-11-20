@@ -1,3 +1,4 @@
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { navigate, useRoute } from './hooks/useRoute'
 import CompraEvento from './pages/CompraEvento/CompraEvento'
 import CriarEvento from './pages/CriarEvento/CriarEvento'
@@ -10,7 +11,29 @@ import Perfil from './pages/Perfil/Perfil'
 import Register from './pages/Register/Register'
 
 function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  )
+}
+
+function AppRoutes() {
   const route = useRoute()
+  const { user, isLoading } = useAuth()
+
+  if (['criar-evento', 'compra', 'nota-fiscal', 'perfil'].includes(route)) {
+    if (isLoading) {
+      return <main className="app-loading" role="status">Verificando sua conta...</main>
+    }
+    if (!user) {
+      return (
+        <Login
+          onNavigateToRegister={() => navigate('cadastro')}
+        />
+      )
+    }
+  }
 
   switch (route) {
     case 'login':

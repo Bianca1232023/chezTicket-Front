@@ -6,6 +6,7 @@ type TicketOptionProps = {
   description: string
   price: string
   quantity: number
+  maxQuantity?: number
   onQuantityChange: (value: number) => void
 }
 
@@ -14,6 +15,7 @@ function TicketOption({
   description,
   price,
   quantity,
+  maxQuantity,
   onQuantityChange,
 }: TicketOptionProps) {
   return (
@@ -23,7 +25,12 @@ function TicketOption({
         <p className="ticket-option__description">{description}</p>
       </div>
       <strong className="ticket-option__price">{price}</strong>
-      <QuantityStepper label={name} value={quantity} onChange={onQuantityChange} />
+      <QuantityStepper
+        label={name}
+        value={quantity}
+        max={maxQuantity}
+        onChange={onQuantityChange}
+      />
     </div>
   )
 }

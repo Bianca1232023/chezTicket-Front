@@ -6,6 +6,51 @@ export type ApiCategory = {
   criadaEm: string
 }
 
+export type ApiUser = {
+  id: number
+  nome: string
+  email: string
+  cpf: string
+}
+
+export type ApiProfile = {
+  usuario: ApiUser
+  eventos: ApiProfileEvent[]
+  reservas: ApiProfileReservationItem[]
+}
+
+export type ApiProfileEvent = {
+  id: number
+  titulo: string
+  status: string
+  imagemCapa: string | null
+  inicio: string | null
+  local: string | null
+}
+
+export type ApiProfileReservationItem = {
+  id: number
+  status: string
+  expiraEm: string
+  criadaEm: string
+  eventoId: number
+  eventoTitulo: string
+  imagemCapa: string | null
+  inicio: string
+  local: string | null
+  ingresso: string
+  quantidade: number
+  preco: number
+  taxaServico: number
+}
+
+export type ApiCreatedReservation = {
+  id: number
+  status: string
+  expiraEm: string
+  criadaEm: string
+}
+
 export type ApiEventSummary = {
   id: number
   titulo: string
@@ -82,6 +127,10 @@ export type CreateCompleteEventRequest = {
   fim: string
   tags: string[]
   redesSociais: Record<string, string>
+  cupom: {
+    codigo: string
+    percentualDesconto: number
+  } | null
   ingressos: Array<{
     nome: string
     gratuito: boolean
@@ -93,6 +142,12 @@ export type CreateCompleteEventRequest = {
     fimVendas: string | null
   }>
   publicar: boolean
+}
+
+export type ApiValidatedCoupon = {
+  codigo: string
+  percentualDesconto: number
+  validoAte: string
 }
 
 export type ApiCreatedEvent = {
