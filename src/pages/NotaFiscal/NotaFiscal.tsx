@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { QRCodeSVG } from 'qrcode.react'
+import { useEffect, useRef, useState } from 'react'
+import { QRCodeCanvas } from 'qrcode.react'
 import Header from '../../components/Header/Header'
 import Footer from '../../components/Footer/Footer'
 import Icon from '../../components/Icon/Icon'
@@ -47,6 +47,9 @@ function NotaFiscal() {
   const [profile, setProfile] = useState<ApiProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+  const [isDownloading, setIsDownloading] = useState(false)
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -108,6 +111,117 @@ function NotaFiscal() {
     })
     : ''
 
+  const downloadPdf = async () => {
+    if (!reservation || !profile) {
+      setDownloadError('Os dados do comprovante ainda não estão disponíveis.')
+      return
+    }
+
+    const qrCanvas = qrCanvasRef.current
+    if (!qrCanvas) {
+      setDownloadError('O QR Code ainda não está disponível. Tente novamente.')
+      return
+    }
+
+    setDownloadError(null)
+    setIsDownloading(true)
+    try {
+      const { jsPDF } = await import('jspdf')
+      const pdf = new jsPDF()
+      const margin = 15
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+      let y = 20
+
+      const writeText = (text: string, maxWidth = pageWidth - margin * 2) => {
+        const lines = pdf.splitTextToSize(text, maxWidth)
+        const height = lines.length * 5
+        if (y + height > pageHeight - margin) {
+          pdf.addPage()
+          y = margin
+        }
+        pdf.text(lines, margin, y)
+        y += height + 3
+      }
+
+      const writeSectionTitle = (title: string) => {
+        pdf.setFont('helvetica', 'bold')
+        pdf.setFontSize(11)
+        writeText(title)
+        pdf.setFont('helvetica', 'normal')
+        pdf.setFontSize(10)
+      }
+
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(18)
+      pdf.text('ChezTicket', margin, y)
+      pdf.setFontSize(13)
+      pdf.text('Comprovante demonstrativo de reserva', margin, y + 9, { maxWidth: 125 })
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(8)
+      pdf.text(
+        'Documento sem validade fiscal e sem confirmação de pagamento.',
+        margin,
+        y + 16,
+        { maxWidth: 125 },
+      )
+      pdf.addImage(
+        qrCanvas.toDataURL('image/png'),
+        'PNG',
+        pageWidth - margin - 42,
+        y - 6,
+        42,
+        42,
+      )
+      y += 48
+      pdf.setFontSize(10)
+
+      writeSectionTitle('Dados da reserva')
+      writeText(`Código: ${code}`)
+      writeText(`Criada em: ${formatDate(reservation.criadaEm)}`)
+      writeText(`Expira em: ${formatDate(reservation.expiraEm)}`)
+      writeText(`Status: ${isExpired ? 'Expirada' : 'Ativa'}`)
+      writeText('Pagamento: não realizado')
+
+      writeSectionTitle('Participante')
+      writeText(profile.usuario.nome)
+      writeText(`CPF: ${profile.usuario.cpf}`)
+      writeText(`E-mail: ${profile.usuario.email}`)
+
+      writeSectionTitle('Evento')
+      writeText(reservation.eventoTitulo)
+      writeText(`Data: ${formatDate(reservation.inicio)}`)
+      if (reservation.local) writeText(`Local: ${reservation.local}`)
+
+      writeSectionTitle('Ingressos')
+      reservationItems.forEach((item) => {
+        writeText(
+          `${item.quantidade} x ${item.ingresso} — unitário ${formatBRL(item.preco)}; `
+          + `taxa ${formatBRL(item.taxaServico)}; total ${formatBRL(
+            (item.preco + item.taxaServico) * item.quantidade,
+          )}`,
+        )
+      })
+
+      writeSectionTitle('Resumo dos valores')
+      writeText(`Subtotal dos ingressos: ${formatBRL(subtotal)}`)
+      if (discount > 0) writeText(`Desconto do cupom: -${formatBRL(discount)}`)
+      writeText(`Taxa de serviço: ${formatBRL(serviceFee)}`)
+      pdf.setFont('helvetica', 'bold')
+      writeText(`Total estimado: ${formatBRL(total)}`)
+      pdf.setFont('helvetica', 'normal')
+      writeText('Este comprovante não substitui uma nota fiscal oficial.')
+
+      pdf.save(`comprovante-reserva-${reservation.id}.pdf`)
+    } catch (reason) {
+      setDownloadError(
+        reason instanceof Error ? reason.message : 'Não foi possível gerar o PDF.',
+      )
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
   return (
     <>
       <Header active="meus-ingressos" />
@@ -152,7 +266,13 @@ function NotaFiscal() {
                     </p>
                     <CopyField label="Identificador:" value={code} />
                     <div className="nota-fiscal__qr">
-                      <QRCodeSVG value={qrValue} size={112} level="M" includeMargin />
+                      <QRCodeCanvas
+                        ref={qrCanvasRef}
+                        value={qrValue}
+                        size={160}
+                        level="M"
+                        includeMargin
+                      />
                       <span>QR Code demonstrativo</span>
                     </div>
                   </div>
@@ -206,7 +326,18 @@ function NotaFiscal() {
 
                 <aside className="nota-fiscal__side">
                   <SectionCard className="nota-fiscal__actions" elevated>
-                    <Button className="nota-fiscal__download">Baixar PDF</Button>
+                    <Button
+                      className="nota-fiscal__download"
+                      disabled={isDownloading}
+                      onClick={() => void downloadPdf()}
+                    >
+                      {isDownloading ? 'Gerando PDF...' : 'Baixar PDF'}
+                    </Button>
+                    {downloadError && (
+                      <p className="nota-fiscal__download-error" role="alert">
+                        {downloadError}
+                      </p>
+                    )}
                     <Button className="nota-fiscal__email" variant="outline">
                       <Icon name="mail" />
                       Enviar para E-mail

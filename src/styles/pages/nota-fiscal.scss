@@ -139,6 +139,13 @@
   font-size: 16px;
 }
 
+.nota-fiscal__download-error {
+  margin: 0;
+  color: tokens.$feedback-danger;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .nota-fiscal__download {
   height: 42px;
 }
