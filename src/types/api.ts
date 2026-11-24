@@ -59,6 +59,36 @@ export type ApiPedidoResult = {
   checkoutUrl: string | null
 }
 
+export type ApiItemPedido = {
+  tipoIngressoId: number
+  quantidade: number
+  precoUnitario: number
+}
+
+export type ApiPedido = {
+  id: number
+  participanteId: number
+  reservaId: number | null
+  cupomId: number | null
+  itens: ApiItemPedido[]
+  subtotal: number
+  valorTaxa: number
+  valorTotal: number
+  status: string
+  criadoEm: string
+  atualizadoEm: string | null
+}
+
+export type ApiIngresso = {
+  id: number
+  pedidoId: number
+  tipoIngressoId: number
+  codigoQr: string
+  status: string
+  titular: string | null
+  dataEmissao: string | null
+}
+
 export type ApiEventSummary = {
   id: number
   titulo: string

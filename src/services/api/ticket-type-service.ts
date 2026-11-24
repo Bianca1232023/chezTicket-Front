@@ -7,4 +7,7 @@ export const ticketTypeService = {
       query: { sessaoId: sessionId },
       signal,
     }),
+
+  buscarPorId: (id: number, signal?: AbortSignal) =>
+    apiGet<ApiTicketType>(`/tipos-ingresso/${id}`, { signal }),
 }

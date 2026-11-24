@@ -9,6 +9,8 @@ import Login from './pages/Login/Login'
 import NotaFiscal from './pages/NotaFiscal/NotaFiscal'
 import Perfil from './pages/Perfil/Perfil'
 import Register from './pages/Register/Register'
+import PedidoSucesso from './pages/PedidoSucesso/PedidoSucesso'
+import PedidoCancelado from './pages/PedidoCancelado/PedidoCancelado'
 
 function App() {
   return (
@@ -22,7 +24,7 @@ function AppRoutes() {
   const route = useRoute()
   const { user, isLoading } = useAuth()
 
-  if (['criar-evento', 'compra', 'nota-fiscal', 'perfil'].includes(route)) {
+  if (['criar-evento', 'compra', 'nota-fiscal', 'perfil', 'pedido-sucesso'].includes(route)) {
     if (isLoading) {
       return <main className="app-loading" role="status">Verificando sua conta...</main>
     }
@@ -52,6 +54,10 @@ function AppRoutes() {
       return <NotaFiscal />
     case 'perfil':
       return <Perfil />
+    case 'pedido-sucesso':
+      return <PedidoSucesso />
+    case 'pedido-cancelado':
+      return <PedidoCancelado />
     default:
       return <Home />
   }

@@ -10,6 +10,8 @@ export type Route =
   | 'compra'
   | 'nota-fiscal'
   | 'perfil'
+  | 'pedido-sucesso'
+  | 'pedido-cancelado'
 
 const ROUTES: Route[] = [
   'home',
@@ -21,6 +23,8 @@ const ROUTES: Route[] = [
   'compra',
   'nota-fiscal',
   'perfil',
+  'pedido-sucesso',
+  'pedido-cancelado',
 ]
 
 export const routeHref = (
