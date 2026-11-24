@@ -4,7 +4,6 @@ import PageTitleBar from '../../components/PageTitleBar/PageTitleBar'
 import SectionCard from '../../components/SectionCard/SectionCard'
 import TicketOption from '../../components/TicketOption/TicketOption'
 import OrderSummary from '../../components/OrderSummary/OrderSummary'
-import PaymentCard, { type CardBrand } from '../../components/PaymentCard/PaymentCard'
 import EventField from '../../components/EventField/EventField'
 import EventInput from '../../components/EventInput/EventInput'
 import { useAuth } from '../../context/AuthContext'
@@ -12,6 +11,7 @@ import { useEventDetails } from '../../hooks/useEventDetails'
 import { navigate, routeHref, useRouteParam } from '../../hooks/useRoute'
 import { profileService } from '../../services/api/profile-service'
 import { couponService } from '../../services/api/coupon-service'
+import { pedidoService } from '../../services/api/pedido-service'
 import type { ApiValidatedCoupon } from '../../types/api'
 import thumbnail from '../../assets/compra-evento/evento-thumb.png'
 import '../../styles/pages/compra-evento.scss'
@@ -21,43 +21,6 @@ const formatBRL = (value: number) =>
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(value))
-
-const eloPrefixes = [
-  '401178', '401179', '431274', '438935', '451416', '457393', '457631', '457632',
-  '504175', '627780', '636297', '636368',
-]
-const eloRanges = [
-  [506699, 506778], [509000, 509999], [650031, 650033], [650035, 650051],
-  [650405, 650439], [650485, 650538], [650541, 650598], [650700, 650718],
-  [650720, 650727], [650901, 650920], [651652, 651679], [655000, 655019],
-  [655021, 655058],
-]
-
-const identifyCardBrand = (value: string): CardBrand | null => {
-  const digits = value.replace(/\D/g, '')
-  if (!digits) return null
-
-  if (digits.length >= 6) {
-    const firstSix = Number(digits.slice(0, 6))
-    if (
-      eloPrefixes.some((prefix) => digits.startsWith(prefix))
-      || eloRanges.some(([start, end]) => firstSix >= start && firstSix <= end)
-    ) {
-      return 'Elo'
-    }
-    if (digits.startsWith('606282')) return 'Hipercard'
-  }
-
-  if (digits.startsWith('4')) return 'Visa'
-  if (/^3[47]/.test(digits)) return 'American Express'
-  if (/^5[1-5]/.test(digits)) return 'Mastercard'
-  if (digits.length >= 4) {
-    const firstFour = Number(digits.slice(0, 4))
-    if (firstFour >= 2221 && firstFour <= 2720) return 'Mastercard'
-  }
-
-  return digits.length >= 6 ? 'Outra bandeira' : null
-}
 
 function CompraEvento() {
   const eventId = useRouteParam('eventoId')
@@ -72,24 +35,12 @@ function CompraEvento() {
   const [couponError, setCouponError] = useState<string | null>(null)
   const [couponMessage, setCouponMessage] = useState<string | null>(null)
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<'credit' | 'debit'>('credit')
-  const [cardNumber, setCardNumber] = useState('')
-  const [cardExpiry, setCardExpiry] = useState('')
-  const [cardCvv, setCardCvv] = useState('')
-  const cardDigits = cardNumber.replace(/\D/g, '')
-  const cardBrand = identifyCardBrand(cardDigits)
-  const maskedCardNumber = cardDigits.length >= 4
-    ? `•••• •••• •••• ${cardDigits.slice(-4)}`
-    : '•••• •••• •••• ••••'
 
   useEffect(() => {
     setCouponCode('')
     setValidatedCoupon(null)
     setCouponError(null)
     setCouponMessage(null)
-    setCardNumber('')
-    setCardExpiry('')
-    setCardCvv('')
   }, [eventId])
 
   if (!eventId || !/^\d+$/.test(eventId)) {
@@ -147,6 +98,11 @@ function CompraEvento() {
     : 0
   const total = ticketSubtotal - couponDiscount + serviceFeeTotal
   const sessionStart = selectedSession?.inicio
+  // Antes de escolher a quantidade, `total` é 0 mesmo para ingressos pagos — por isso a
+  // previsão "vai cobrar?" parte do catálogo (há algum tipo pago?) e só usa o total de fato
+  // depois que o comprador seleciona algo.
+  const hasOnlyFreeTickets = tickets.length > 0 && tickets.every((ticket) => ticket.gratuito)
+  const willChargeOnline = selectedTickets.length > 0 ? total > 0 : !hasOnlyFreeTickets
 
   const applyCoupon = async () => {
     setCouponError(null)
@@ -200,6 +156,15 @@ function CompraEvento() {
           ? { eventoId: Number(eventId), codigo: validatedCoupon.codigo }
           : undefined,
       )
+      const pedido = await pedidoService.criar(
+        reservation.id,
+        Number(eventId),
+        validatedCoupon?.codigo,
+      )
+      if (pedido.checkoutUrl) {
+        window.location.href = pedido.checkoutUrl
+        return
+      }
       navigate('nota-fiscal', {
         reservaId: reservation.id,
         descontoCentavos: Math.round(couponDiscount * 100),
@@ -229,7 +194,10 @@ function CompraEvento() {
     <>
       <Header />
       <main className="compra-evento">
-        <PageTitleBar title="Reservar ingressos" badge="Reserva sem cobrança online" />
+        <PageTitleBar
+          title="Reservar ingressos"
+          badge={willChargeOnline ? 'Pagamento seguro via Stripe' : 'Ingresso gratuito'}
+        />
         <div className="compra-evento__container">
           <div className="compra-evento__steps">
             <SectionCard elevated title="1. Ingressos disponíveis">
@@ -316,101 +284,12 @@ function CompraEvento() {
               </dl>
             </SectionCard>
 
-            <SectionCard title="3. Forma de pagamento">
-              <fieldset
-                className="compra-evento__payment-methods"
-                aria-describedby="purchase-payment-note"
-              >
-                <legend>Selecione uma modalidade</legend>
-                <label className={paymentMethod === 'credit' ? 'is-selected' : undefined}>
-                  <input
-                    type="radio"
-                    name="purchase-payment-method"
-                    value="credit"
-                    checked={paymentMethod === 'credit'}
-                    onChange={() => setPaymentMethod('credit')}
-                  />
-                  <span>Cartão de crédito</span>
-                </label>
-                <label className={paymentMethod === 'debit' ? 'is-selected' : undefined}>
-                  <input
-                    type="radio"
-                    name="purchase-payment-method"
-                    value="debit"
-                    checked={paymentMethod === 'debit'}
-                    onChange={() => setPaymentMethod('debit')}
-                  />
-                  <span>Cartão de débito</span>
-                </label>
-              </fieldset>
-              <div className="compra-evento__payment">
-                <div className="compra-evento__fields compra-evento__fields--card">
-                  <EventField
-                    label="Número do Cartão"
-                    htmlFor="purchase-card-number"
-                    className="compra-evento__field-wide"
-                  >
-                    <EventInput
-                      id="purchase-card-number"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="off"
-                      maxLength={23}
-                      placeholder="•••• •••• •••• ••••"
-                      value={cardNumber}
-                      onChange={(event) => {
-                        const digits = event.target.value.replace(/\D/g, '').slice(0, 19)
-                        setCardNumber(digits.replace(/(\d{4})(?=\d)/g, '$1 '))
-                      }}
-                    />
-                  </EventField>
-                  <EventField label="Validade" htmlFor="purchase-card-expiry">
-                    <EventInput
-                      id="purchase-card-expiry"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="off"
-                      maxLength={5}
-                      placeholder="MM/AA"
-                      value={cardExpiry}
-                      onChange={(event) => {
-                        const digits = event.target.value.replace(/\D/g, '').slice(0, 4)
-                        setCardExpiry(
-                          digits.length > 2
-                            ? `${digits.slice(0, 2)}/${digits.slice(2)}`
-                            : digits,
-                        )
-                      }}
-                    />
-                  </EventField>
-                  <EventField label="CVV" htmlFor="purchase-card-cvv">
-                    <EventInput
-                      id="purchase-card-cvv"
-                      type="password"
-                      inputMode="numeric"
-                      autoComplete="off"
-                      maxLength={cardBrand === 'American Express' ? 4 : 3}
-                      placeholder="•••"
-                      value={cardCvv}
-                      onChange={(event) => {
-                        const maxLength = cardBrand === 'American Express' ? 4 : 3
-                        setCardCvv(event.target.value.replace(/\D/g, '').slice(0, maxLength))
-                      }}
-                    />
-                  </EventField>
-                </div>
-                <PaymentCard brand={cardBrand} number={maskedCardNumber} />
-              </div>
-              <p id="purchase-payment-note" className="compra-evento__payment-note">
-                Prévia visual: os dados do cartão não são enviados nem armazenados. A reserva
-                continua sem cobrança online.
-              </p>
-            </SectionCard>
-
             <SectionCard title="Condições da reserva">
               <p className="compra-evento__reservation-note">
-                A reserva retém os ingressos por 10 minutos. Não há pagamento online nesta etapa;
-                reservas expiradas liberam o estoque automaticamente.
+                {willChargeOnline
+                  ? 'O ingresso fica retido por alguns minutos enquanto você paga no Stripe. '
+                    + 'Se o pagamento não for concluído a tempo, o estoque é liberado automaticamente.'
+                  : 'Este ingresso é gratuito: a reserva é confirmada na hora, sem pagamento.'}
               </p>
             </SectionCard>
           </div>
@@ -426,11 +305,19 @@ function CompraEvento() {
               lines={lines}
               totalLabel="Total estimado:"
               totalValue={formatBRL(total)}
-              ctaLabel={isSubmitting ? 'Reservando...' : 'Reservar ingressos'}
+              ctaLabel={
+                isSubmitting
+                  ? (willChargeOnline ? 'Redirecionando...' : 'Confirmando...')
+                  : (willChargeOnline ? 'Ir para pagamento' : 'Confirmar reserva gratuita')
+              }
               ctaHref={routeHref('compra', { eventoId: eventId, sessaoId: sessionId })}
               ctaDisabled={isSubmitting || selectedTickets.length === 0}
               onCtaClick={() => void reserve()}
-              note="Sem cobrança agora. A reserva expira em 10 minutos."
+              note={
+                willChargeOnline
+                  ? 'Você será redirecionado para o Stripe para concluir o pagamento.'
+                  : 'Ingresso gratuito — sem cobrança.'
+              }
             />
           </aside>
         </div>

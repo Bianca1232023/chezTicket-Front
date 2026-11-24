@@ -51,6 +51,14 @@ export type ApiCreatedReservation = {
   criadaEm: string
 }
 
+export type ApiPedidoResult = {
+  pedido: {
+    id: number
+    status: string
+  }
+  checkoutUrl: string | null
+}
+
 export type ApiEventSummary = {
   id: number
   titulo: string
