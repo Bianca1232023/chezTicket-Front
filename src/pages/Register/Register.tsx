@@ -13,7 +13,8 @@ type RegisterProps = {
 }
 
 function Register({ onNavigateToLogin }: RegisterProps) {
-  const { register } = useAuth()
+  const { register, registerOrganizer } = useAuth()
+  const [tipoConta, setTipoConta] = useState<'participante' | 'organizador'>('participante')
   const currentRoute = useRoute()
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -30,12 +31,23 @@ function Register({ onNavigateToLogin }: RegisterProps) {
 
     setIsSubmitting(true)
     try {
-      await register({
+      const dadosComuns = {
         nome: String(form.get('full-name')),
         email: String(form.get('register-email')),
         senha,
-        cpf: String(form.get('register-cpf')),
-      })
+      }
+      if (tipoConta === 'organizador') {
+        await registerOrganizer({
+          ...dadosComuns,
+          razaoSocial: String(form.get('register-razao-social')),
+          documento: String(form.get('register-documento')),
+        })
+      } else {
+        await register({
+          ...dadosComuns,
+          cpf: String(form.get('register-cpf')),
+        })
+      }
       navigate(currentRoute === 'cadastro' ? 'perfil' : currentRoute)
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Não foi possível criar a conta.')
@@ -51,6 +63,19 @@ function Register({ onNavigateToLogin }: RegisterProps) {
       variant="register"
     >
       <form className="auth-form" onSubmit={submit}>
+        <fieldset className="auth-account-choice">
+          <legend>Quero criar uma conta de:</legend>
+          <label>
+            <input type="radio" name="tipo-conta" value="participante"
+              checked={tipoConta === 'participante'}
+              onChange={() => setTipoConta('participante')} /> Comprador
+          </label>
+          <label>
+            <input type="radio" name="tipo-conta" value="organizador"
+              checked={tipoConta === 'organizador'}
+              onChange={() => setTipoConta('organizador')} /> Organizador
+          </label>
+        </fieldset>
         <TextField
           id="full-name"
           label="Nome completo:"
@@ -70,16 +95,39 @@ function Register({ onNavigateToLogin }: RegisterProps) {
           maxLength={180}
           required
         />
-        <TextField
-          id="register-cpf"
-          label="CPF:"
-          placeholder="Somente números"
-          icon="email"
-          inputMode="numeric"
-          pattern="[0-9]{11}"
-          maxLength={11}
-          required
-        />
+        {tipoConta === 'participante' ? (
+          <TextField
+            id="register-cpf"
+            label="CPF:"
+            placeholder="Somente números"
+            icon="email"
+            inputMode="numeric"
+            pattern="[0-9]{11}"
+            maxLength={11}
+            required
+          />
+        ) : (
+          <>
+            <TextField
+              id="register-razao-social"
+              label="Razão social:"
+              placeholder="Nome da organização"
+              icon="email"
+              maxLength={160}
+              required
+            />
+            <TextField
+              id="register-documento"
+              label="CNPJ:"
+              placeholder="14 números (sem pontos ou barras)"
+              icon="email"
+              inputMode="numeric"
+              pattern="[0-9]{14}"
+              maxLength={14}
+              required
+            />
+          </>
+        )}
         <TextField
           id="register-password"
           label="Senha:"

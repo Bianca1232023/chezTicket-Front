@@ -14,6 +14,8 @@ import { useApiQuery } from '../../hooks/useApiQuery'
 import { useAuth } from '../../context/AuthContext'
 import { eventService } from '../../services/api/event-service'
 import { profileService } from '../../services/api/profile-service'
+import { ticketService } from '../../services/api/ticket-service'
+import { QRCodeCanvas } from 'qrcode.react'
 import type { ApiProfileReservationItem } from '../../types/api'
 import coverTop from '../../assets/perfil/cover-wide.png'
 import coverBase from '../../assets/perfil/cover-bottom.png'
@@ -117,6 +119,8 @@ function Perfil() {
   const { user } = useAuth()
   const query = useCallback((signal: AbortSignal) => profileService.get(signal), [])
   const { data, isLoading, isError, error, refetch } = useApiQuery(query)
+  const ticketQuery = useCallback((signal: AbortSignal) => ticketService.list(signal), [])
+  const { data: issuedTickets, isLoading: ticketsLoading, error: ticketsError } = useApiQuery(ticketQuery)
   const tabParam = useRouteParam('tab')
   const tabFromRoute = tabParam === 'meus-eventos' || tabParam === 'notas-fiscais'
     ? tabParam
@@ -125,6 +129,24 @@ function Perfil() {
   const [deletingEventId, setDeletingEventId] = useState<number | null>(null)
   const [eventActionError, setEventActionError] = useState<string | null>(null)
   const [eventActionMessage, setEventActionMessage] = useState<string | null>(null)
+  const [reenviandoPedido, setReenviandoPedido] = useState<number | null>(null)
+  const [mensagemEmail, setMensagemEmail] = useState<string | null>(null)
+  const [erroEmail, setErroEmail] = useState<string | null>(null)
+
+  const reenviarIngressos = async (pedidoId: number) => {
+    setReenviandoPedido(pedidoId)
+    setMensagemEmail(null)
+    setErroEmail(null)
+    try {
+      await ticketService.resend(pedidoId)
+      setMensagemEmail(`Envio do pedido ${pedidoId} agendado para o e-mail da sua conta.`)
+    } catch (error) {
+      setErroEmail(error instanceof Error ? error.message : 'Falha ao solicitar o reenvio.')
+    } finally {
+      setReenviandoPedido(null)
+    }
+  }
+
 
   useEffect(() => {
     setActiveTab(tabFromRoute)
@@ -222,7 +244,9 @@ function Perfil() {
                       location={event.local ?? 'Local não informado'}
                       badge={event.status}
                       image={event.imagemCapa ?? hackathonImage}
-                      href={routeHref('evento', { id: event.id })}
+                      href={event.status === 'RASCUNHO'
+                        ? routeHref('criar-evento', { id: event.id })
+                        : routeHref('evento', { id: event.id })}
                       onDelete={() => void deleteEvent(event.id, event.titulo)}
                       isDeleting={deletingEventId === event.id}
                     />
@@ -259,6 +283,46 @@ function Perfil() {
                 ) : (
                   <p role="status">Você não tem reservas ativas no momento.</p>
                 )}
+              </section>
+
+              <section className="perfil__section">
+                <h2 className="perfil__section-title">Ingressos emitidos</h2>
+                {mensagemEmail && <p role="status">{mensagemEmail}</p>}
+                {erroEmail && <p role="alert">{erroEmail}</p>}
+                {ticketsLoading && <p role="status">Carregando seus ingressos...</p>}
+                {ticketsError && <p role="alert">{ticketsError.message}</p>}
+                {!ticketsLoading && !ticketsError && !issuedTickets?.length && (
+                  <p>Você ainda não possui ingressos emitidos.</p>
+                )}
+                <div className="perfil__issued-tickets">
+                  {issuedTickets?.map((ticket) => (
+                    <article className="perfil__issued-ticket" key={ticket.id}>
+                      <QRCodeCanvas value={ticket.codigoQr} size={155} level="M" includeMargin />
+                      <div>
+                        <h3>{ticket.ingresso}</h3>
+                        <p>{ticket.eventoTitulo}</p>
+                        <p>Ingresso nº {ticket.id}</p>
+                        <p>Status: {ticket.status}</p>
+                        <ButtonLink
+                          className="perfil__invoice-link"
+                          href={routeHref('nota-fiscal', { reservaId: ticket.reservaId })}
+                        >
+                          Ver compra
+                        </ButtonLink>
+                        {issuedTickets?.find((t) => t.pedidoId === ticket.pedidoId)?.id === ticket.id && (
+                          <button
+                            type="button"
+                            className="perfil__invoice-link"
+                            disabled={reenviandoPedido === ticket.pedidoId}
+                            onClick={() => void reenviarIngressos(ticket.pedidoId)}
+                          >
+                            {reenviandoPedido === ticket.pedidoId ? 'Solicitando...' : 'Reenviar ingressos por e-mail'}
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  ))}
+                </div>
               </section>
 
               <section className="perfil__section perfil__section--history">

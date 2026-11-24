@@ -1,0 +1,84 @@
+CHEZTICKET - ETAPA 10C, PARTE 1: EDICAO DE RASCUNHOS
+====================================================
+
+ESCOPO
+- Reutiliza o formulario de criacao para editar eventos em RASCUNHO.
+- Em Perfil > Meus Eventos, clicar em um rascunho abre o formulario com dados existentes.
+- GET /api/eventos/{id}/rascunho: consulta restrita ao organizador titular.
+- PUT /api/eventos/{id}/rascunho: atualizacao multipart com verificacao do titular,
+  estado RASCUNHO e gravacao atomica em transacao.
+- Permite atualizar titulo, descricao, categoria, endereco, cidade, UF, datas,
+  tipos de ingresso, janelas de venda, cupom, imagens, tags e redes sociais.
+- Preserva os IDs dos ingressos mantidos. Permite inserir/remover ingressos sem
+  reservas ou vendas. Imagens nao reenviadas permanecem inalteradas.
+- Impede editar eventos publicados, eventos de outro organizador e eventos com
+  reservas/vendas vinculadas a ingressos. Rejeita rascunhos com multiplas sessoes
+  ou local compartilhado com outra sessao.
+- Sem migracoes SQL. Sem habilitar publicacao nem exclusao de eventos.
+
+PRE-REQUISITOS
+- Todas as alteracoes da Etapa 10B Parte 3, incluindo os ajustes de tags,
+  sessao expirada e previa de imagem, ja aplicadas.
+- Backend e MariaDB locais funcionando; docker compose disponivel no Windows.
+- Backup atualizado do codigo e do banco antes de instalar o pacote.
+
+INSTALACAO - POWERSHELL
+1. Abra o terminal do VS Code na RAIZ chezTicket-Front (package.json).
+2. Coloque AJUSTE-ETAPA-10C-PARTE-1-EDICAO-RASCUNHOS.zip em Downloads.
+3. Extraia, substituindo apenas os arquivos correspondentes:
+
+   Expand-Archive -LiteralPath "$env:USERPROFILE\Downloads\AJUSTE-ETAPA-10C-PARTE-1-EDICAO-RASCUNHOS.zip" -DestinationPath . -Force
+
+4. Entre na pasta do backend/compose:
+
+   cd chezTicket
+
+5. Recompile o backend, rode os testes e recrie o container:
+
+   docker compose build backend
+   docker run --rm -v "${PWD}\backend:/workspace" -w /workspace maven:3.9-eclipse-temurin-17 mvn -B test
+   docker compose up -d --force-recreate backend
+   docker compose ps
+
+6. Volte a raiz e valide o frontend:
+
+   cd ..
+   npm run build
+   npm run dev
+
+VALIDACAO NO NAVEGADOR
+1. Entre com a mesma conta de organizador utilizada para criar o evento ID 5.
+2. Acesse Perfil > Meus Eventos e clique no evento em RASCUNHO.
+3. Confirme que aparecem os dados existentes, inclusive as 3 tags e as imagens.
+4. Altere SOMENTE o titulo para "Teste Tags Etapa 10B - Editado" e adicione
+   a tag "Edicao10C" (total de 4 tags). Nao troque imagens nem ingressos
+   neste primeiro teste.
+5. Va a Revisao e clique em "Salvar alteracoes".
+6. Confira a mensagem de sucesso. Volte a Perfil > Meus Eventos e reabra o
+   rascunho, conferindo persistencia apos novo carregamento.
+7. No Adminer, execute as consultas abaixo.
+
+   SELECT id, titulo, status FROM evento WHERE id = 5;
+   SELECT tag FROM evento_tag WHERE evento_id = 5 ORDER BY tag;
+   SELECT evento_id, tipo, OCTET_LENGTH(conteudo) AS bytes
+     FROM evento_midia WHERE evento_id = 5 ORDER BY tipo;
+   SELECT ti.id, ti.nome, ti.quantidade_total, ti.quantidade_vendida
+     FROM tipo_ingresso ti JOIN sessao s ON s.id = ti.sessao_id
+     WHERE s.evento_id = 5 ORDER BY ti.id;
+
+RESULTADOS ESPERADOS
+- ID 5 continua em RASCUNHO, com titulo atualizado e 4 tags.
+- As 2 imagens existentes continuam gravadas.
+- Os ingressos mantidos preservam seus IDs e quantidades.
+- Nenhum evento novo e criado; o ID 5 e atualizado.
+- Usuario de outro organizador nao consegue ler nem editar esse rascunho.
+- O botao de publicacao continua indisponivel.
+
+IMPORTANTE
+- Execute os comandos Docker e Maven no computador de desenvolvimento:
+  o pacote passou em verificacao de TypeScript e em parse de sintaxe Java,
+  mas ainda nao foi compilado ou testado integrado ao MariaDB neste ambiente.
+- NAO execute UPDATE/DELETE manual nas tabelas nem force publicacao por SQL.
+- O sistema segue LOCAL; nenhuma alteracao no GitHub e realizada.
+- As rotas publicas de sessoes/tipos de ingresso seguem para revisao de
+  visibilidade na Parte 3. Nao coloque eventos reais em producao nesta etapa.

@@ -1,4 +1,5 @@
 export type EventTicketDraft = {
+  id?: number
   name: string
   price: string
   serviceFee: string
@@ -18,6 +19,8 @@ export type EventDraft = {
   endDate: string
   endTime: string
   address: string
+  city: string
+  state: string
   coverFile: File | null
   coverPreviewUrl: string
   tags: string[]

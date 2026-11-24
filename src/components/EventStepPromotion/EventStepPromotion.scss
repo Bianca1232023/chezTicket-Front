@@ -29,6 +29,39 @@
   }
 }
 
+.event-step-promotion__image-preview {
+  margin: 16px 0 0;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 140px;
+    border-radius: 6px;
+    object-fit: cover;
+  }
+
+  figcaption {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-top: 8px;
+  }
+}
+
+.event-step-promotion__image-status {
+  color: tokens.$feedback-success;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.event-step-promotion__image-name {
+  overflow: hidden;
+  color: tokens.$color-secondary;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .event-step-promotion__actions {
   margin-top: 24px;
 }

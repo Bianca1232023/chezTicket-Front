@@ -1,0 +1,51 @@
+# ---------------------------------------------------------------------------
+# chezTicket
+#
+# Substitui o template de Visual Studio/.NET que o repositório tinha antes.
+# Nada daquele template se aplica a este projeto (Java/Maven + React + Docker),
+# e ele chegou a causar um bug real: o padrão genérico `[Oo]ut/` (pensado para
+# pastas de build do C#) estava ignorando silenciosamente todo `port/out/` e
+# `adapter/out/` da arquitetura hexagonal — ou seja, boa parte do back-end
+# nunca ia para o commit. Mantenha este arquivo enxuto e específico do stack
+# real do projeto.
+# ---------------------------------------------------------------------------
+
+# Java / Maven
+target/
+*.class
+*.jar
+!.mvn/wrapper/*.jar
+hs_err_pid*.log
+
+# Node / front-end (quando existir)
+node_modules/
+dist/
+build/
+.vite/
+npm-debug.log*
+yarn-error.log*
+
+# Variáveis de ambiente — nunca versionar valores reais, só o .env.example
+.env
+.env.*.local
+.env.local
+
+# IDEs
+.idea/
+*.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.classpath
+.project
+.settings/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs genéricos
+*.log

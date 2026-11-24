@@ -25,6 +25,16 @@ export class ApiError extends Error {
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '')
 
+// Aviso interno: a sessão autenticada deixou de ser válida no servidor.
+// Não confundir uma senha incorreta no login com sessão expirada.
+export const SESSION_EXPIRED_EVENT = 'chezticket:session-expired'
+
+function notifyExpiredSession(pathname: string, status: number) {
+  if (status !== 401) return
+  if (/\/auth\/(login|cadastro|cadastro-organizador|logout)$/.test(pathname)) return
+  window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))
+}
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null
 
@@ -48,17 +58,41 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   let response: Response
   try {
+    // Solicita um token CSRF vinculado à sessão antes de métodos mutáveis.
+    // O Vite encaminha ambos os pedidos ao mesmo backend via /api.
+    const method = (options.method ?? 'GET').toUpperCase()
+    let csrfHeader: Record<string, string> = {}
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+      const csrfResponse = await fetch(new URL(`${apiBaseUrl}/auth/csrf`, window.location.origin), {
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' },
+        signal: options.signal,
+      })
+      if (!csrfResponse.ok) {
+        notifyExpiredSession(url.pathname, csrfResponse.status)
+        throw new ApiError(
+          csrfResponse.status === 401
+            ? 'Sua sessão expirou. Faça login novamente para continuar.'
+            : 'Não foi possível iniciar a sessão segura.',
+          csrfResponse.status,
+        )
+      }
+      const csrf = (await csrfResponse.json()) as { headerName: string; token: string }
+      csrfHeader = { [csrf.headerName]: csrf.token }
+    }
     response = await fetch(url, {
       method: options.method,
       credentials: 'same-origin',
       headers: {
         Accept: 'application/json',
         ...(options.contentType ? { 'Content-Type': options.contentType } : {}),
+        ...csrfHeader,
       },
       body: options.body,
       signal: options.signal,
     })
   } catch (error) {
+    if (error instanceof ApiError) throw error
     if (options.signal?.aborted) throw error
     throw new ApiError('Não foi possível conectar à API. Verifique se o backend está em execução.')
   }
@@ -80,8 +114,13 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (!response.ok) {
+    notifyExpiredSession(url.pathname, response.status)
+    const expired = response.status === 401 &&
+      !/\/auth\/(login|cadastro|cadastro-organizador|logout)$/.test(url.pathname)
     throw new ApiError(
-      responseMessage(payload, `A API retornou o erro ${response.status}.`),
+      expired
+        ? 'Sua sessão expirou. Faça login novamente para continuar.'
+        : responseMessage(payload, `A API retornou o erro ${response.status}.`),
       response.status,
       payload,
     )
@@ -119,3 +158,6 @@ export const apiPostMultipart = <T>(path: string, body: FormData) =>
     method: 'POST',
     body,
   })
+
+export const apiPutMultipart = <T>(path: string, body: FormData) =>
+  request<T>(path, { method: 'PUT', body })

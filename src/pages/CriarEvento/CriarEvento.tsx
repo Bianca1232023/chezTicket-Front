@@ -10,6 +10,10 @@ import type { CreateCompleteEventRequest } from '../../types/api'
 import { useAuth } from '../../context/AuthContext'
 import coverImage from '../../assets/criar-evento/capa-evento-formulario.png'
 import { useCreateEvent } from '../../hooks/useCreateEvent'
+import { getPublicationIssues } from '../../utils/publication-validation'
+import { useRouteParam } from '../../hooks/useRoute'
+import { eventService } from '../../services/api/event-service'
+import type { ApiEditableDraft } from '../../types/api'
 import '../../styles/pages/criar-evento.scss'
 
 const steps = ['Informações', 'Ingressos', 'Divulgações', 'Revisão']
@@ -43,9 +47,11 @@ const createInitialDraft = (): EventDraft => ({
   endDate: '',
   endTime: '',
   address: '',
+  city: '',
+  state: '',
   coverFile: null,
   coverPreviewUrl: coverImage,
-  tags: ['Evento', 'ao vivo', 'Tecnologia'],
+  tags: [],
   couponEnabled: false,
   couponDiscountPercent: '10',
   couponCode: '',
@@ -96,18 +102,108 @@ function parseMoney(value: string) {
   return Number(normalized)
 }
 
+function money(amount: number) {
+  return `R$ ${Number(amount).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2, maximumFractionDigits: 2,
+  })}`
+}
+
+function draftFromApi(data: ApiEditableDraft): EventDraft {
+  const [startDate, startTime = ''] = data.inicio.split('T')
+  const [endDate, endTime = ''] = data.fim.split('T')
+  return {
+    ...createInitialDraft(),
+    name: data.titulo,
+    categoryId: String(data.categoriaId),
+    description: data.descricao ?? '',
+    startDate,
+    startTime: startTime.slice(0, 5),
+    endDate,
+    endTime: endTime.slice(0, 5),
+    address: data.endereco,
+    city: data.cidade,
+    state: data.uf,
+    coverFile: null,
+    coverPreviewUrl: data.imagemCapa || coverImage,
+    promotionFile: null,
+    promotionPreviewUrl: data.imagemDivulgacao ?? '',
+    tags: data.tags,
+    socialLinks: {
+      instagram: data.redesSociais.instagram ?? '',
+      facebook: data.redesSociais.facebook ?? '',
+      x: data.redesSociais.x ?? '',
+      linkedin: data.redesSociais.linkedin ?? '',
+    },
+    couponEnabled: Boolean(data.cupom),
+    couponDiscountPercent: String(data.cupom?.percentualDesconto ?? 10),
+    couponCode: data.cupom?.codigo ?? '',
+    tickets: data.ingressos.map((ticket) => ({
+      id: ticket.id,
+      name: ticket.nome,
+      price: ticket.gratuito ? 'Gratuito' : money(ticket.preco),
+      serviceFee: money(ticket.taxaServico),
+      quantity: String(ticket.quantidadeTotal),
+      purchaseLimit: String(ticket.limitePorCompra),
+      salesStart: ticket.inicioVendas ?? '',
+      salesEnd: ticket.fimVendas ?? '',
+    })),
+  }
+}
+
 function CriarEvento() {
-  const [step, setStep] = useState(() => Number(new URLSearchParams(location.search).get('step') ?? 0)) // TEMP
+  const [step, setStep] = useState(0)
   const [draft, setDraft] = useState(createInitialDraft)
+  const idParam = useRouteParam('id')
+  const editId = /^[1-9]\d*$/.test(idParam) ? Number(idParam) : null
+  const isEditing = editId !== null
+  const [loadingDraft, setLoadingDraft] = useState(isEditing)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [savedEventId, setSavedEventId] = useState<number | null>(null)
   const [isPublished, setIsPublished] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitMessage, setSubmitMessage] = useState<string | null>(null)
   const [couponError, setCouponError] = useState<string | null>(null)
   const submitLock = useRef(false)
+  const [savingDraft, setSavingDraft] = useState(false)
   const createEvent = useCreateEvent()
   const { user } = useAuth()
   const { title, subtitle } = headings[step]
+  const publicationIssues = getPublicationIssues(draft)
+
+  useEffect(() => {
+    if (editId !== null) return
+    setDraft(createInitialDraft())
+    setSavedEventId(null)
+    setHasUnsavedChanges(false)
+    setIsPublished(false)
+    setStep(0)
+    setLoadingDraft(false)
+    setLoadError(null)
+    setSubmitError(null)
+    setSubmitMessage(null)
+  }, [editId])
+
+  useEffect(() => {
+    if (editId === null) return
+    const controller = new AbortController()
+    setLoadingDraft(true)
+    setLoadError(null)
+    eventService.getEditableDraft(editId, controller.signal).then((data) => {
+      if (controller.signal.aborted) return
+      setDraft(draftFromApi(data))
+      setSavedEventId(editId)
+      setHasUnsavedChanges(false)
+      setStep(0)
+    }).catch((error: unknown) => {
+      if (!controller.signal.aborted) {
+        setLoadError(error instanceof Error ? error.message : 'Não foi possível abrir o rascunho.')
+      }
+    }).finally(() => {
+      if (!controller.signal.aborted) setLoadingDraft(false)
+    })
+    return () => controller.abort()
+  }, [editId])
 
   useEffect(() => {
     const previewUrls = [draft.coverPreviewUrl, draft.promotionPreviewUrl].filter(
@@ -118,6 +214,11 @@ function CriarEvento() {
   }, [draft.coverPreviewUrl, draft.promotionPreviewUrl])
 
   const updateDraft = (updates: Partial<EventDraft>) => {
+    // O nome da categoria e apenas um dado de exibicao, preenchido
+    // automaticamente ao carregar um rascunho. Nao representa edicao.
+    if (Object.keys(updates).some((key) => key !== 'categoryName')) {
+      setHasUnsavedChanges(true)
+    }
     setDraft((current) => ({ ...current, ...updates }))
   }
 
@@ -125,6 +226,7 @@ function CriarEvento() {
     index: number,
     updates: Partial<EventDraft['tickets'][number]>,
   ) => {
+    setHasUnsavedChanges(true)
     setDraft((current) => ({
       ...current,
       tickets: current.tickets.map((ticket, ticketIndex) =>
@@ -133,7 +235,19 @@ function CriarEvento() {
     }))
   }
 
+  const addTicket = () => {
+    setHasUnsavedChanges(true)
+    setDraft((current) => ({
+      ...current,
+      tickets: [...current.tickets, {
+        name: 'Novo ingresso', price: 'R$ 30,00', serviceFee: '0',
+        quantity: '100', purchaseLimit: '10', salesStart: '', salesEnd: '',
+      }],
+    }))
+  }
+
   const removeTicket = (index: number) => {
+    setHasUnsavedChanges(true)
     setDraft((current) => ({
       ...current,
       tickets: current.tickets.filter((_, ticketIndex) => ticketIndex !== index),
@@ -148,8 +262,8 @@ function CriarEvento() {
     if (!draft.couponEnabled) return null
 
     const discount = Number(draft.couponDiscountPercent)
-    if (!Number.isInteger(discount) || discount < 1 || discount > 100) {
-      return 'Informe um desconto entre 1% e 100%.'
+    if (!Number.isInteger(discount) || discount < 1 || discount > 99) {
+      return 'Informe um desconto entre 1% e 99%. Cupons de 100% exigem um fluxo gratuito específico.'
     }
     if (!/^[A-Za-z0-9]{8}$/.test(draft.couponCode)) {
       return 'O código do cupom deve conter exatamente 8 caracteres alfanuméricos.'
@@ -169,6 +283,52 @@ function CriarEvento() {
   const submit = async (publicar: boolean) => {
     setSubmitError(null)
     setSubmitMessage(null)
+    if (!user?.papeis?.includes('ORGANIZADOR')) {
+      setSubmitError('Faça login com uma conta de organizador para salvar um evento.')
+      return
+    }
+    if (publicar && savedEventId === null) {
+      setSubmitError('Salve o evento como rascunho antes de publicar.')
+      return
+    }
+    if (publicar && hasUnsavedChanges) {
+      setSubmitError('Existem alterações não salvas. Salve as alterações antes de publicar.')
+      return
+    }
+    if (publicar && publicationIssues.length > 0) {
+      setSubmitError('Não foi possível publicar. Confira os itens pendentes na lista "O que falta para publicar?" e salve as alterações.')
+      return
+    }
+    if (isPublished) {
+      setSubmitError('Este evento já foi publicado.')
+      return
+    }
+    if (!publicar && savedEventId !== null && !isEditing) {
+      setSubmitError('Este rascunho já foi salvo. Abra-o em Meus Eventos para editar.')
+      return
+    }
+    for (const file of [draft.coverFile, draft.promotionFile]) {
+      if (!file) continue
+      if (file.size > 5 * 1024 * 1024 ||
+          !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        setSubmitError('Cada imagem deve ser JPG, PNG ou WEBP, com no máximo 5 MB.')
+        return
+      }
+    }
+    if (draft.tags.length > 10 || draft.tags.some((tag) => tag.length > 40)) {
+      setSubmitError('Use no máximo 10 tags, com até 40 caracteres cada.')
+      return
+    }
+    for (const value of Object.values(draft.socialLinks)) {
+      if (!value.trim()) continue
+      try {
+        const url = new URL(value.trim())
+        if (url.protocol !== 'https:') throw new Error('HTTPS obrigatório')
+      } catch {
+        setSubmitError('Preencha os links sociais com URLs HTTPS válidas.')
+        return
+      }
+    }
     const couponValidationError = getCouponValidationError()
     if (couponValidationError) {
       setCouponError(couponValidationError)
@@ -196,6 +356,11 @@ function CriarEvento() {
     }
     if (!draft.address.trim()) {
       setSubmitError('Informe o endereço do evento.')
+      return
+    }
+    if (draft.address.trim().length > 255 || !draft.city.trim() ||
+        !/^[A-Za-z]{2}$/.test(draft.state.trim())) {
+      setSubmitError('Informe endereço (até 255 caracteres), cidade e UF com duas letras.')
       return
     }
     if (!Number.isFinite(startTimestamp) || !Number.isFinite(endTimestamp)) {
@@ -244,8 +409,10 @@ function CriarEvento() {
         )
         return
       }
-      if (ticket.salesStart && ticket.salesEnd && ticket.salesEnd < ticket.salesStart) {
-        setSubmitError(`O encerramento das vendas de "${ticket.name}" precede o início.`)
+      if ((ticket.salesStart && ticket.salesStart > draft.startDate) ||
+          (ticket.salesEnd && ticket.salesEnd > draft.startDate) ||
+          (ticket.salesStart && ticket.salesEnd && ticket.salesEnd < ticket.salesStart)) {
+        setSubmitError(`As datas de venda de "${ticket.name}" devem estar em ordem e até o dia do evento.`)
         return
       }
 
@@ -268,13 +435,14 @@ function CriarEvento() {
     )
 
     const request: CreateCompleteEventRequest = {
-      organizadorId: user?.id ?? 0,
       categoriaId: Number(draft.categoryId),
       titulo: draft.name.trim(),
       descricao: draft.description.trim(),
       classificacaoEtaria: 'LIVRE',
       politicaReembolso: 'PADRAO',
       endereco: draft.address.trim(),
+      cidade: draft.city.trim(),
+      uf: draft.state.trim().toUpperCase(),
       inicio: start,
       fim: end,
       tags: draft.tags,
@@ -290,27 +458,39 @@ function CriarEvento() {
     }
 
     if (submitLock.current) return
+    if (publicar && !window.confirm(
+      'Publicar este evento agora? Ele ficará visível no catálogo e não poderá mais ser editado como rascunho.',
+    )) return
     submitLock.current = true
+    setSavingDraft(true)
     try {
       if (publicar && savedEventId !== null) {
         await createEvent.publishAsync(savedEventId)
         setIsPublished(true)
-        setSubmitMessage('Evento publicado com sucesso.')
+        setHasUnsavedChanges(false)
+        setSubmitMessage('Evento publicado com sucesso. Agora está visível no catálogo público.')
         return
       }
 
-      const created = await createEvent.mutateAsync({
-        request,
-        coverFile: draft.coverFile,
-        promotionFile: draft.promotionFile,
-      })
-      setSavedEventId(created.evento.id)
-      setIsPublished(publicar)
-      setSubmitMessage(
-        publicar
-          ? 'Evento publicado com sucesso.'
-          : 'Rascunho do evento salvo com sucesso.',
-      )
+      if (isEditing && editId !== null) {
+        const updated = await eventService.updateDraft(
+          editId, request, draft.tickets.map((ticket) => ticket.id ?? null),
+          draft.coverFile, draft.promotionFile,
+        )
+        setDraft(draftFromApi(updated))
+        setHasUnsavedChanges(false)
+        setSubmitMessage('Alterações do rascunho salvas com sucesso.')
+      } else {
+        const created = await createEvent.mutateAsync({
+          request,
+          coverFile: draft.coverFile,
+          promotionFile: draft.promotionFile,
+        })
+        setSavedEventId(created.evento.id)
+        setHasUnsavedChanges(false)
+        setIsPublished(false)
+        setSubmitMessage('Rascunho do evento salvo com sucesso.')
+      }
     } catch (reason) {
       setSubmitError(
         reason instanceof Error
@@ -319,6 +499,7 @@ function CriarEvento() {
       )
     } finally {
       submitLock.current = false
+      setSavingDraft(false)
     }
   }
 
@@ -327,15 +508,17 @@ function CriarEvento() {
       <Header active="criar-evento" />
       <main className="criar-evento">
         <div className="criar-evento__container">
-          <h1 className="criar-evento__title">{title}</h1>
-          <p className="criar-evento__subtitle">{subtitle}</p>
+          <h1 className="criar-evento__title">{isEditing ? 'Editar rascunho' : title}</h1>
+          <p className="criar-evento__subtitle">{isEditing ? 'Atualize seu evento e salve as alterações.' : subtitle}</p>
+          {loadingDraft && <p role="status">Carregando dados do rascunho...</p>}
+          {loadError && <p role="alert">{loadError}</p>}
           <EventStepper
             steps={steps}
             current={step}
             className="criar-evento__stepper"
           />
 
-          <div className="criar-evento__content">
+          {!loadingDraft && !loadError && <div className="criar-evento__content">
             <div hidden={step !== 0}>
               <EventStepInfo draft={draft} onChange={updateDraft} onNext={next} />
             </div>
@@ -348,6 +531,7 @@ function CriarEvento() {
                 couponError={couponError}
                 onTicketChange={updateTicket}
                 onTicketRemove={removeTicket}
+                onTicketAdd={addTicket}
                 onCouponChange={(updates) => {
                   setCouponError(null)
                   updateDraft(updates)
@@ -373,14 +557,17 @@ function CriarEvento() {
                 onEditPromotion={() => goTo(2)}
                 onSaveDraft={() => void submit(false)}
                 onPublish={() => void submit(true)}
-                isSubmitting={createEvent.isPending}
+                isSubmitting={createEvent.isPending || savingDraft}
                 submitError={submitError}
                 submitMessage={submitMessage}
                 savedEventId={savedEventId}
                 isPublished={isPublished}
+                isEditing={isEditing}
+                hasUnsavedChanges={hasUnsavedChanges}
+                publicationIssues={publicationIssues}
               />
             </div>
-          </div>
+          </div>}
         </div>
       </main>
     </>

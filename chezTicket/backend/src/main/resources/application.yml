@@ -1,0 +1,87 @@
+spring:
+  application:
+    name: chezticket-backend
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mariadb://localhost:8080/chezticket}
+    username: ${SPRING_DATASOURCE_USERNAME:chezticket}
+    password: ${SPRING_DATASOURCE_PASSWORD:chezticket}
+    driver-class-name: org.mariadb.jdbc.Driver
+    hikari:
+      pool-name: chezticket-pool
+      maximum-pool-size: 10
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 11MB
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # O schema é responsabilidade exclusiva do Flyway. O Hibernate nunca altera tabelas.
+      ddl-auto: none
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: true
+
+  mail:
+    host: ${BREVO_SMTP_HOST:smtp-relay.brevo.com}
+    port: ${BREVO_SMTP_PORT:587}
+    username: ${BREVO_SMTP_LOGIN:}
+    password: ${BREVO_SMTP_KEY:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 10000
+          timeout: 15000
+          writetimeout: 15000
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+server:
+  port: ${SERVER_PORT:8081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+
+logging:
+  level:
+    org.flywaydb: info
+
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET}
+  frontend-url: ${CHEZTICKET_FRONTEND_URL:http://localhost:5173}
+
+# Desativado por padrao: configurar as credenciais da Brevo no .env antes de ativar.
+chezticket:
+  email:
+    enabled: ${CHEZTICKET_EMAIL_ATIVO:false}
+    remetente: ${CHEZTICKET_EMAIL_REMETENTE:}
+    poll-ms: ${CHEZTICKET_EMAIL_INTERVALO_MS:60000}

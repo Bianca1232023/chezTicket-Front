@@ -1,0 +1,47 @@
+AJUSTE ETAPA 10C - NOME DO INGRESSO
+===================================
+
+Objetivo
+--------
+Permitir definir ou editar o nome de cada tipo de ingresso no formulário de
+criação e edição de eventos. O campo fica na aba "Ingressos", antes do preço.
+O nome é atualizado no mesmo estado que já alimenta o envio para a API.
+
+Arquivo alterado
+----------------
+src/components/EventStepTickets/EventStepTickets.tsx
+
+Alteração
+---------
+- Campo "Nome do ingresso" editável, inclusive para ingressos novos.
+- Limite de 80 caracteres, conforme restrição existente da API e banco.
+- O título do cartão acompanha o nome digitado.
+- Nenhuma alteração no backend, MariaDB, Stripe ou cupons.
+
+Instalação (PowerShell, na raiz de chezTicket-Front)
+---------------------------------------------------
+Expand-Archive -LiteralPath "$env:USERPROFILE\Downloads\AJUSTE-ETAPA-10C-NOME-INGRESSO.zip" -DestinationPath . -Force
+npm run build
+
+Teste
+-----
+1. Abrir Perfil > Meus Eventos > evento ID 5 > aba Ingressos.
+2. No quarto ingresso (ID 16), alterar "Novo ingresso" para "Ingresso VIP".
+3. Manter preço R$ 100,00, quantidade 30 e limite por compra 2.
+4. Avançar para Revisão e salvar alterações.
+5. Fechar e reabrir o evento, verificando se "Ingresso VIP" continua visível.
+6. No Adminer, executar:
+
+SELECT id, nome, preco, quantidade_total, limite_por_compra
+FROM tipo_ingresso
+WHERE id IN (13, 14, 15, 16)
+ORDER BY id;
+
+Esperado: o ingresso ID 16 passa a ter nome "Ingresso VIP" e mantém
+suas quantidades/preço; os IDs 13, 14 e 15 permanecem inalterados.
+
+Observação
+----------
+Na versão atual, a gratuidade ainda é inferida pelo nome "Gratuito".
+A mudança deste nome precisa de validação própria antes de ser usada em
+produção. Neste teste, renomear apenas o novo ingresso pago (ID 16).

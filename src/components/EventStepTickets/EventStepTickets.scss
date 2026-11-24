@@ -119,3 +119,15 @@
     gap: 16px;
   }
 }
+
+.event-step-tickets__add {
+  margin-top: 1rem;
+  border: 1px solid currentColor;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+.event-step-tickets__add:hover { opacity: 0.8; }

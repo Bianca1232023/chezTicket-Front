@@ -1,0 +1,28 @@
+ETAPA 5 — Ajustes pontuais da interface (sem mudanças no backend)
+
+1) CompraEvento.tsx: remove o formulário demonstrativo de cartão, que agora é
+   coletado exclusivamente no Stripe Checkout. Oculta cupons ainda sem API,
+   e impede a seleção de ingressos gratuitos, cujo fluxo de pagamento R$ 0
+   ainda não foi implementado. Reserva e redirecionamento para NotaFiscal
+   continuam iguais.
+2) NotaFiscal.tsx: oculta o botão demonstrativo de envio por e-mail, que
+   não tinha implementação. O comprovante PDF é oferecido só para reservas;
+   ingressos pagos continuam visíveis no perfil com QR verdadeiro.
+3) Home.tsx: evita prometer Pix, boleto ou recebimento por e-mail, que a
+   implementação atual não assegura.
+4) OrderSummary.tsx e EventSummary.tsx: usam imagem local de fallback quando
+   a URL da capa está vazia ou falha, evitando o ícone de imagem quebrada.
+
+APLICACAO:
+- Faça uma cópia local do projeto antes de extrair.
+- Do PowerShell em ...\chezTicket-Front\chezTicket:
+  Expand-Archive -LiteralPath "$env:USERPROFILE\Downloads\chezTicket_etapa5_ajustes_interface.zip" -DestinationPath (Resolve-Path ..).Path -Force
+- Ainda em ...\chezTicket-Front\chezTicket:
+  cd ..
+  npm run build
+  npm run dev
+- Confira seleção de ingressos pagos, banner de pagamento via Stripe,
+  comprovante e imagens sem falhas.
+
+Este pacote inclui APENAS 5 arquivos .tsx do frontend. Não modifica credenciais,
+Spring Security, MariaDB, Flyway ou Stripe. Nenhum pagamento adicional é necessário.

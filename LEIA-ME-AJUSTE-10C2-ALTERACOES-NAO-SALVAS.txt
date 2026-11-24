@@ -1,0 +1,40 @@
+CHEZTICKET - ETAPA 10C / PARTE 2
+AJUSTE: CATEGORIA NAO DEVE MARCAR O RASCUNHO COMO ALTERADO
+=========================================================
+
+PROBLEMA
+--------
+Ao abrir um rascunho salvo, o frontend carregava o ID da categoria e
+preenchia automaticamente seu nome para exibicao. O preenchimento do nome
+era tratado como mudanca de formulario, ativando indevidamente o bloqueio:
+"Existem alteracoes nao salvas. Salve as alteracoes antes de publicar."
+
+ALTERACAO
+---------
+src/pages/CriarEvento/CriarEvento.tsx
+- Atualizada a funcao updateDraft para nao marcar como nao salva uma
+  alteracao que modifique apenas o campo auxiliar categoryName.
+- Alteracoes reais, incluindo a troca da categoria (categoryId), continuam
+  exigindo salvamento antes da publicacao.
+- Nenhuma API, regra do backend, tabela, migracao ou pagamento foi alterado.
+
+INSTALACAO LOCAL (PowerShell)
+----------------------------
+1. Baixe o ZIP e coloque-o em Downloads.
+2. Abra o terminal na raiz do projeto chezTicket-Front, com package.json.
+3. Execute:
+
+   Expand-Archive -LiteralPath "$env:USERPROFILE\Downloads\AJUSTE-ETAPA-10C2-ALTERACOES-NAO-SALVAS.zip" -DestinationPath . -Force
+   npm run build
+
+4. Recarregue a pagina do navegador (se houver alteracoes reais nao salvas,
+   salve-as antes). Reabra o rascunho em Perfil > Meus Eventos.
+5. Avance ate Revisao e confira se desapareceu o aviso de alteracoes
+   nao salvas. Publique apenas apos revisar os dados do evento.
+
+VALIDACAO
+---------
+- Em rascunho reaberto e sem modificacoes reais, Publicar nao e bloqueado
+  pela categoria preenchida automaticamente.
+- Ao editar de fato o evento, Publicar continua exigindo Salvar alteracoes.
+- Nao publicar o evento ID 5; utilizar o rascunho criado para o teste 10C2.

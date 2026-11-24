@@ -31,6 +31,7 @@ function EventStepPromotion({
     <>
       <div className="event-step-promotion__top">
         <EventPanel title="Redes Sociais" className="event-step-promotion__social">
+          <p role="note">Opcional: informe apenas as redes sociais que deseja divulgar.</p>
           <div className="event-step-promotion__links">
             <EventSocialLinkField
               network="instagram"
@@ -99,6 +100,7 @@ function EventStepPromotion({
           title="Imagem da Divulgação"
           className="event-step-promotion__image"
         >
+          <p role="note">Opcional: a imagem de divulgação não substitui a imagem de capa obrigatória.</p>
           <EventUploadDropzone
             id="evento-imagem-divulgacao"
             size="sm"
@@ -106,6 +108,25 @@ function EventStepPromotion({
             hint="Formatos suportados: JPG, PNG, WEBP (Máx. 5MB)"
             onFileChange={handlePromotionFile}
           />
+          {draft.promotionPreviewUrl && (
+            <figure className="event-step-promotion__image-preview">
+              <img
+                src={draft.promotionPreviewUrl}
+                alt="Prévia da imagem de divulgação selecionada"
+              />
+              <figcaption>
+                <span className="event-step-promotion__image-status">
+                  {draft.promotionFile ? 'Imagem selecionada' : 'Imagem já cadastrada'}
+                </span>
+                <span
+                  className="event-step-promotion__image-name"
+                  title={draft.promotionFile?.name ?? 'Imagem de divulgação cadastrada'}
+                >
+                  {draft.promotionFile?.name ?? 'Imagem de divulgação do rascunho'}
+                </span>
+              </figcaption>
+            </figure>
+          )}
         </EventPanel>
       </div>
 

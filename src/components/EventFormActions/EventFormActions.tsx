@@ -4,6 +4,8 @@ import './EventFormActions.scss'
 type EventFormActionsProps = {
   showBack?: boolean
   showDraft?: boolean
+  draftLabel?: string
+  hideNext?: boolean
   onBack?: () => void
   onSaveDraft?: () => void
   onNext?: () => void
@@ -16,6 +18,8 @@ type EventFormActionsProps = {
 function EventFormActions({
   showBack = true,
   showDraft = false,
+  draftLabel = 'Salvar Rascunho',
+  hideNext = false,
   onBack,
   onSaveDraft,
   onNext,
@@ -45,11 +49,11 @@ function EventFormActions({
             onClick={onSaveDraft}
             disabled={isSubmitting}
           >
-            Salvar Rascunho
+            {draftLabel}
           </Button>
         )}
       </div>
-      {nextHref ? (
+      {!hideNext && (nextHref ? (
         <a
           className="button button--primary event-actions__button event-actions__button--next"
           href={nextHref}
@@ -64,7 +68,7 @@ function EventFormActions({
         >
           {isSubmitting ? 'Salvando...' : nextLabel}
         </Button>
-      )}
+      ))}
     </div>
   )
 }

@@ -25,13 +25,13 @@ const featureItems = [
     id: 'easy-payment',
     icon: <Icon name="wallet" />,
     title: 'Pagamento Facilitado',
-    subtitle: 'Pix, Cartão e Boleto',
+    subtitle: 'Cartão com Stripe',
   },
   {
     id: 'instant-ticket',
     icon: <TicketStarIcon />,
-    title: 'Ingresso na Hora',
-    subtitle: 'Receba por email',
+    title: 'Ingresso Digital',
+    subtitle: 'Acesse em Meus ingressos',
   },
 ]
 

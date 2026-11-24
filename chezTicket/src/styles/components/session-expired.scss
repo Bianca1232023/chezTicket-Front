@@ -1,0 +1,18 @@
+// Aviso de sessão expirada em qualquer página, sem mostrar apenas o código 401.
+.session-expired-notice {
+  position: relative;
+  z-index: 10;
+  padding: 12px 20px;
+  background: #fff7e6;
+  border-bottom: 1px solid #d7ad58;
+  color: #553b11;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.session-expired-notice a {
+  color: #4d3495;
+  font-weight: 700;
+  text-decoration: underline;
+}

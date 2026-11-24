@@ -301,3 +301,36 @@
     }
   }
 }
+
+// Ingressos reais apresentados somente depois da confirmacao do pedido.
+.nota-fiscal__issued-tickets {
+  padding: 14px;
+  border: 1px solid tokens.$border-default;
+  border-radius: 12px;
+}
+
+.nota-fiscal__issued-tickets h3 {
+  margin: 0 0 14px;
+  font-size: 17px;
+}
+
+.nota-fiscal__issued-ticket {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+}
+
+.nota-fiscal__issued-ticket + .nota-fiscal__issued-ticket {
+  border-top: 1px solid tokens.$border-default;
+}
+
+.nota-fiscal__issued-ticket canvas {
+  max-width: 100%;
+  background: white;
+}
+
+.nota-fiscal__issued-ticket p {
+  margin: 6px 0;
+}

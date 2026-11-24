@@ -5,11 +5,11 @@ import EventCoverPreview from '../EventCoverPreview/EventCoverPreview'
 import EventTicketTable from '../EventTicketTable/EventTicketTable'
 import EventSocialIcon from '../EventSocialIcon/EventSocialIcon'
 import EventInput from '../EventInput/EventInput'
-import EventChecklist from '../EventChecklist/EventChecklist'
 import EventFormActions from '../EventFormActions/EventFormActions'
 import EventShareButton from '../EventShareButton/EventShareButton'
 import Icon from '../Icon/Icon'
 import type { EventDraft } from '../../types/event-draft'
+import type { PublicationIssue } from '../../utils/publication-validation'
 import { routeHref } from '../../hooks/useRoute'
 import './EventStepReview.scss'
 
@@ -26,6 +26,9 @@ type EventStepReviewProps = {
   submitMessage: string | null
   savedEventId: number | null
   isPublished: boolean
+  isEditing?: boolean
+  hasUnsavedChanges?: boolean
+  publicationIssues: PublicationIssue[]
 }
 
 const channels = [
@@ -35,13 +38,6 @@ const channels = [
   { network: 'linkedin', label: 'LinkedIn' },
 ] as const
 
-const checklist = [
-  { label: 'Informações do evento' },
-  { label: 'Data e Local' },
-  { label: 'Imagem do evento' },
-  { label: 'Ingressos', mobileOnly: true },
-  { label: 'Divulgação', mobileOnly: true },
-]
 
 function formatDate(value: string) {
   if (!value) return 'Não informado'
@@ -95,6 +91,9 @@ function EventStepReview({
   submitMessage,
   savedEventId,
   isPublished,
+  isEditing = false,
+  hasUnsavedChanges = false,
+  publicationIssues,
 }: EventStepReviewProps) {
   const [shareStatus, setShareStatus] = useState('')
   const ticketRows = draft.tickets.map((ticket) => ({
@@ -107,12 +106,11 @@ function EventStepReview({
     draft.socialLinks[network].trim(),
   )
   const linkReady = isPublished && savedEventId !== null
-  const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '')
   const publicAppUrl =
     import.meta.env.VITE_PUBLIC_APP_URL?.trim() || window.location.origin
   const eventLink = linkReady
     ? new URL(
-        `${apiBaseUrl}/eventos/${savedEventId}/compartilhar`,
+        routeHref('evento', { id: savedEventId }),
         `${publicAppUrl.replace(/\/+$/, '')}/`,
       ).href
     : ''
@@ -222,7 +220,7 @@ function EventStepReview({
           <EventPanel
             title="Descrição o evento"
             actions={
-              savedEventId === null ? (
+              (!isPublished && (savedEventId === null || isEditing)) ? (
                 <EventEditButton onClick={onEditInfo} />
               ) : undefined
             }
@@ -236,7 +234,7 @@ function EventStepReview({
           <EventPanel
             title="Local"
             actions={
-              savedEventId === null ? (
+              (!isPublished && (savedEventId === null || isEditing)) ? (
                 <EventEditButton onClick={onEditInfo} />
               ) : undefined
             }
@@ -260,7 +258,7 @@ function EventStepReview({
             title="Ingressos"
             variant="raised"
             actions={
-              savedEventId === null ? (
+              (!isPublished && (savedEventId === null || isEditing)) ? (
                 <EventEditButton onClick={onEditTickets} />
               ) : undefined
             }
@@ -278,7 +276,7 @@ function EventStepReview({
           <EventPanel
             title="Divulgação"
             actions={
-              savedEventId === null ? (
+              (!isPublished && (savedEventId === null || isEditing)) ? (
                 <EventEditButton onClick={onEditPromotion} />
               ) : undefined
             }
@@ -368,7 +366,27 @@ function EventStepReview({
             )}
           </EventPanel>
 
-          <EventChecklist title="Tudo pronto pra publicar?" items={checklist} />
+          {publicationIssues.length > 0 ? (
+            <section className="event-step-review__issues" aria-label="Pendências para publicação">
+              <h2>O que falta para publicar?</h2>
+              <p>Você pode salvar o rascunho agora. Para publicar, corrija os itens abaixo:</p>
+              <ul>
+                {publicationIssues.map((issue, index) => (
+                  <li key={`${issue.step}-${index}`}>
+                    <span>{issue.message}</span>
+                    <button type="button" onClick={issue.step === 0 ? onEditInfo : onEditTickets}>
+                      Corrigir em {issue.step === 0 ? 'Informações' : 'Ingressos'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : (
+            <section className="event-step-review__ready" role="status">
+              <h2>Requisitos básicos preenchidos</h2>
+              <p>Agora confira o resumo, salve as alterações pendentes e solicite a publicação. O servidor fará a validação final.</p>
+            </section>
+          )}
         </div>
       </div>
 
@@ -383,9 +401,21 @@ function EventStepReview({
         </p>
       )}
 
+      {!isPublished && publicationIssues.length === 0 && (
+        <p role="note">A conferência final ocorre no servidor. Se houver outra inconsistência, a API mostrará o motivo.</p>
+      )}
+      {!isPublished && <p role="status">
+        {savedEventId === null
+          ? 'Salve o rascunho antes de publicar.'
+          : hasUnsavedChanges
+            ? 'Salve suas alterações antes de publicar.'
+            : 'O evento está salvo como rascunho e pronto para a validação de publicação.'}
+      </p>}
       <EventFormActions
-        showBack={savedEventId === null}
-        showDraft={savedEventId === null && !isPublished}
+        hideNext={savedEventId === null}
+        showBack={!isPublished && (savedEventId === null || isEditing)}
+        showDraft={!isPublished && (savedEventId === null || isEditing)}
+        draftLabel={isEditing ? 'Salvar alterações' : 'Salvar Rascunho'}
         onBack={onBack}
         onSaveDraft={onSaveDraft}
         onNext={onPublish}

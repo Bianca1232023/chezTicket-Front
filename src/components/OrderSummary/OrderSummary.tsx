@@ -1,3 +1,4 @@
+import fallbackImage from '../../assets/compra-evento/evento-thumb.png'
 import Icon from '../Icon/Icon'
 import Button from '../Button/Button'
 import LinkButton from '../LinkButton/LinkButton'
@@ -43,7 +44,15 @@ function OrderSummary({
     <section className="order-summary">
       <h2 className="order-summary__title">{title}</h2>
       <div className="order-summary__event">
-        <img className="order-summary__thumb" src={thumbnail} alt="" />
+        <img
+          className="order-summary__thumb"
+          src={thumbnail || fallbackImage}
+          alt=""
+          onError={(event) => {
+            event.currentTarget.onerror = null
+            event.currentTarget.src = fallbackImage
+          }}
+        />
         <div>
           <p className="order-summary__overline">{overline}</p>
           <p className="order-summary__event-name">{eventName}</p>

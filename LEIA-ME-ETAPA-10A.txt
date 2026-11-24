@@ -1,0 +1,42 @@
+ETAPA 10A - Contas de organizadores e papeis (baseado no ZIP atualizado)
+
+Este pacote NAO libera alteracao de eventos. A API de escrita do catalogo
+permanece bloqueada ate a Etapa 10B, quando verificaremos a propriedade
+do evento e a aprovacao de organizadores para publicacao.
+
+Arquivos alterados: 8 (backend 3, frontend 5). Sem migracoes, sem mexer no
+Stripe, Brevo ou pedidos.
+
+Novo fluxo:
+- O cadastro passa a oferecer Comprador ou Organizador.
+- A conta de organizador exige razao social e CNPJ com 14 digitos.
+- O login identifica o papel REAL pelas tabelas do MariaDB.
+- /api/auth/me devolve papeis; nao existe campo de papel no login.
+- As rotas de compra continuam exclusivas para participantes.
+- Nao existe conceder ADMINISTRADOR por cadastro publico.
+- O campo CNPJ tem apenas validacao de formato nesta fase; validacao fiscal,
+  verificacao de identidade e aprovacao para PUBLICAR ainda ficam pendentes.
+- Os usuarios de demostracao 1, 2 e 3 tem senhas de exemplo: eles nao
+  podem fazer login com uma senha valida sem um procedimento seguro de reset.
+
+Instalacao (PowerShell dentro de chezTicket):
+  Expand-Archive -LiteralPath "$env:USERPROFILE\Downloads\chezTicket_etapa10a_perfis.zip" -DestinationPath (Resolve-Path ..).Path -Force
+  docker compose build backend
+  docker run --rm -v "${PWD}\backend:/workspace" -w /workspace maven:3.9-eclipse-temurin-17 mvn -B test
+  docker compose up -d --force-recreate backend
+  cd ..
+  npm run build
+
+Teste:
+1) Crie conta nova como Organizador pelo formulario com e-mail novo,
+   senha de 8+ caracteres, razao social e CNPJ de teste nao cadastrado.
+2) Entre no mesmo usuario e abra http://localhost:5173/api/auth/me:
+   deve conter "papeis":["ORGANIZADOR"] e "cpf":null.
+3) Acesso de organizador a operacoes de compra deve ser negado.
+4) Sair, entrar com a conta de comprador ja usada; /api/auth/me deve
+   conter "papeis":["PARTICIPANTE"].
+5) Verifique se os ingressos de compras anteriores continuam visiveis.
+6) Nao teste criacao de evento ainda; rota de escrita segue bloqueada.
+
+Seguranca: se estiver usando credenciais reais, evite divulgar o ZIP do
+projeto inteiro ou .env. O patch nao inclui senhas.

@@ -18,6 +18,9 @@ import PriceSummary from '../../components/PriceSummary/PriceSummary'
 import LabeledValue from '../../components/LabeledValue/LabeledValue'
 import { routeHref, useRouteParam } from '../../hooks/useRoute'
 import { profileService } from '../../services/api/profile-service'
+import { ApiError } from '../../services/api/http-client'
+import { checkoutService, type CheckoutResumo } from '../../services/api/checkout-service'
+import { ticketService, type ApiIssuedTicket } from '../../services/api/ticket-service'
 import type { ApiProfile } from '../../types/api'
 import eventImage from '../../assets/nota-fiscal/evento-festival.png'
 import '../../styles/pages/nota-fiscal.scss'
@@ -44,11 +47,20 @@ const itemColumns: DataTableColumn[] = [
 function NotaFiscal() {
   const reservationId = useRouteParam('reservaId')
   const discountCents = useRouteParam('descontoCentavos')
+  const codigoCupom = useRouteParam('codigoCupom')
+  const paymentReturn = useRouteParam('pagamento')
   const [profile, setProfile] = useState<ApiProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [downloadError, setDownloadError] = useState<string | null>(null)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [isStartingPayment, setIsStartingPayment] = useState(false)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  const [checkoutResumo, setCheckoutResumo] = useState<CheckoutResumo | null>(null)
+  const [resumoError, setResumoError] = useState<string | null>(null)
+  const [issuedTickets, setIssuedTickets] = useState<ApiIssuedTicket[]>([])
+  const [ticketsLoading, setTicketsLoading] = useState(true)
+  const [ticketsError, setTicketsError] = useState<string | null>(null)
   const qrCanvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -77,6 +89,46 @@ function NotaFiscal() {
     return () => controller.abort()
   }, [reservationId])
 
+  // O valor realmente cobrado e o desconto aplicado vem do pedido no banco.
+  useEffect(() => {
+    if (!/^\d+$/.test(reservationId)) return
+    let active = true
+    setResumoError(null)
+    checkoutService.getSummary(Number(reservationId))
+      .then((resumo) => { if (active) setCheckoutResumo(resumo) })
+      .catch((error: unknown) => {
+        if (!active) return
+        if (error instanceof ApiError && error.status === 404) {
+          setCheckoutResumo(null) // Reserva ainda sem pedido; mostrar apenas estimativa.
+        } else {
+          setResumoError(error instanceof Error ? error.message : 'Erro ao obter o valor do pedido.')
+        }
+      })
+    return () => { active = false }
+  }, [reservationId])
+
+  // O QR real vem do servidor, de ingressos emitidos e do usuario autenticado.
+  useEffect(() => {
+    const controller = new AbortController()
+    setTicketsLoading(true)
+    setTicketsError(null)
+    ticketService.list(controller.signal)
+      .then((tickets) => {
+        if (!controller.signal.aborted) {
+          setIssuedTickets(tickets.filter((ticket) => ticket.reservaId === Number(reservationId)))
+        }
+      })
+      .catch((reason: unknown) => {
+        if (!controller.signal.aborted) {
+          setTicketsError(reason instanceof Error ? reason.message : 'Erro ao consultar ingressos emitidos.')
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setTicketsLoading(false)
+      })
+    return () => controller.abort()
+  }, [reservationId])
+
   const reservationItems = profile?.reservas.filter(
     (item) => item.id === Number(reservationId),
   ) ?? []
@@ -97,11 +149,17 @@ function NotaFiscal() {
     0,
   )
   const parsedDiscountCents = /^\d+$/.test(discountCents) ? Number(discountCents) : 0
-  const discount = Math.min(parsedDiscountCents / 100, subtotal)
-  const total = subtotal - discount + serviceFee
+  const discount = checkoutResumo?.desconto ?? Math.min(parsedDiscountCents / 100, subtotal)
+  const total = checkoutResumo?.valorTotal ?? (subtotal - discount + serviceFee)
+  // Datas de expiracao sem timezone vem do backend configurado em UTC.
   const isExpired = reservation
-    ? reservation.status !== 'ATIVA' || new Date(reservation.expiraEm).getTime() <= Date.now()
+    ? reservation.status === 'EXPIRADA' || reservation.status === 'CANCELADA'
+      || (reservation.status === 'ATIVA'
+        && new Date(`${reservation.expiraEm}Z`).getTime() <= Date.now())
     : false
+  const isConverted = reservation?.status === 'CONVERTIDA'
+  const apenasGratuitos = reservationItems.length > 0
+    && reservationItems.every((item) => item.preco === 0 && item.taxaServico === 0)
   const qrValue = reservation
     ? JSON.stringify({
       tipo: 'comprovante-demonstrativo-de-reserva',
@@ -110,6 +168,47 @@ function NotaFiscal() {
       criadaEm: reservation.criadaEm,
     })
     : ''
+
+  const startPayment = async () => {
+    if (!reservation || reservation.status !== 'ATIVA' || isExpired || isStartingPayment) return
+    setCheckoutError(null)
+    setIsStartingPayment(true)
+    try {
+      const checkout = await checkoutService.create(reservation.id, codigoCupom || undefined)
+      // A URL vem do backend, que calcula o preco e vincula o pedido ao titular.
+      const url = new URL(checkout.url)
+      if (url.protocol !== 'https:' || url.hostname !== 'checkout.stripe.com') {
+        throw new Error('O endereco de pagamento retornado e invalido.')
+      }
+      window.location.assign(url.href)
+    } catch (reason) {
+      setCheckoutError(reason instanceof Error ? reason.message : 'Nao foi possivel iniciar o pagamento.')
+      setIsStartingPayment(false)
+    }
+  }
+
+  const issueFree = async () => {
+    if (!reservation || reservation.status !== 'ATIVA' || isExpired || isStartingPayment) return
+    setCheckoutError(null)
+    setIsStartingPayment(true)
+    try {
+      await checkoutService.issueFree(reservation.id)
+      const [newProfile, tickets, resumo] = await Promise.all([
+        profileService.get(),
+        ticketService.list(),
+        checkoutService.getSummary(reservation.id),
+      ])
+      setProfile(newProfile)
+      setIssuedTickets(tickets.filter((ticket) => ticket.reservaId === reservation.id))
+      setCheckoutResumo(resumo)
+      // Limpa parametros de pagamento nao aplicaveis a ingressos gratuitos.
+      window.location.hash = routeHref('nota-fiscal', { reservaId: reservation.id })
+    } catch (reason) {
+      setCheckoutError(reason instanceof Error ? reason.message : 'Não foi possível emitir os ingressos gratuitos.')
+    } finally {
+      setIsStartingPayment(false)
+    }
+  }
 
   const downloadPdf = async () => {
     if (!reservation || !profile) {
@@ -239,11 +338,17 @@ function NotaFiscal() {
             <>
               <PageTitle
                 icon={<Icon name="ticket" />}
-                title="Comprovante de reserva"
-                subtitle="Documento demonstrativo, sem validade fiscal e sem confirmação de pagamento."
+                title={isConverted
+                  ? (apenasGratuitos ? 'Ingressos gratuitos confirmados' : 'Compra confirmada')
+                  : 'Comprovante de reserva'}
+                subtitle={isConverted
+                  ? (apenasGratuitos ? 'Seus ingressos foram emitidos sem cobrança.' : 'Pagamento confirmado. Seus ingressos emitidos estão disponíveis abaixo.')
+                  : 'Documento demonstrativo, sem validade fiscal e sem confirmação de pagamento.'}
               />
               <p className="nota-fiscal__disclaimer" role="note">
-                Esta reserva não representa uma compra concluída e não substitui uma nota fiscal oficial.
+                {isConverted
+                  ? 'Compra confirmada. Este documento não substitui uma nota fiscal oficial.'
+                  : 'Esta reserva não representa uma compra concluída e não substitui uma nota fiscal oficial.'}
               </p>
               <ButtonLink
                 className="nota-fiscal__back"
@@ -255,7 +360,9 @@ function NotaFiscal() {
               <div className="nota-fiscal__layout">
                 <SectionCard className="nota-fiscal__invoice" elevated>
                   <div className="nota-fiscal__invoice-head">
-                    <StatusBadge>Comprovante demonstrativo</StatusBadge>
+                    <StatusBadge>{isConverted
+                      ? (apenasGratuitos ? 'Ingresso gratuito emitido' : 'Pagamento confirmado')
+                      : 'Comprovante demonstrativo'}</StatusBadge>
                     <h2 className="nota-fiscal__number">
                       Código da reserva:
                       <br />
@@ -265,16 +372,18 @@ function NotaFiscal() {
                       Criada em: {formatDate(reservation.criadaEm)}
                     </p>
                     <CopyField label="Identificador:" value={code} />
-                    <div className="nota-fiscal__qr">
-                      <QRCodeCanvas
-                        ref={qrCanvasRef}
-                        value={qrValue}
-                        size={160}
-                        level="M"
-                        includeMargin
-                      />
-                      <span>QR Code demonstrativo</span>
-                    </div>
+                    {!isConverted && (
+                      <div className="nota-fiscal__qr">
+                        <QRCodeCanvas
+                          ref={qrCanvasRef}
+                          value={qrValue}
+                          size={160}
+                          level="M"
+                          includeMargin
+                        />
+                        <span>QR Code demonstrativo</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="nota-fiscal__parties">
@@ -282,7 +391,7 @@ function NotaFiscal() {
                       role="Plataforma"
                       name="ChezTicket"
                       lines={[
-                        'Comprovante de reserva',
+                        isConverted ? (apenasGratuitos ? 'Ingresso gratuito emitido' : 'Compra confirmada') : 'Comprovante de reserva',
                         'Sem validade fiscal',
                       ]}
                     />
@@ -295,6 +404,28 @@ function NotaFiscal() {
                       ]}
                     />
                   </div>
+
+                  {isConverted && (
+                    <section className="nota-fiscal__issued-tickets" aria-label="Ingressos emitidos">
+                      <h3>Seus ingressos emitidos</h3>
+                      {ticketsLoading && <p role="status">Carregando ingressos...</p>}
+                      {ticketsError && <p role="alert">{ticketsError}</p>}
+                      {!ticketsLoading && !ticketsError && issuedTickets.length === 0 && (
+                        <p role="status">Pagamento confirmado. Atualize a página se o ingresso ainda não aparecer.</p>
+                      )}
+                      {issuedTickets.map((ticket) => (
+                        <article className="nota-fiscal__issued-ticket" key={ticket.id}>
+                          <QRCodeCanvas value={ticket.codigoQr} size={180} level="M" includeMargin />
+                          <div>
+                            <strong>{ticket.ingresso}</strong>
+                            <p>{ticket.eventoTitulo}</p>
+                            <p>Ingresso nº {ticket.id} · {ticket.status}</p>
+                            <small>QR Code do ingresso emitido</small>
+                          </div>
+                        </article>
+                      ))}
+                    </section>
+                  )}
 
                   <DataTable
                     caption="Ingressos desta reserva"
@@ -318,7 +449,7 @@ function NotaFiscal() {
                           ? [{ label: 'Desconto do cupom', value: `-${formatBRL(discount)}` }]
                           : []),
                         { label: 'Taxa de serviço', value: formatBRL(serviceFee) },
-                        { label: 'Total estimado', value: formatBRL(total) },
+                        { label: checkoutResumo ? 'Total do pedido' : 'Total estimado', value: formatBRL(total) },
                       ]}
                     />
                   </div>
@@ -326,22 +457,44 @@ function NotaFiscal() {
 
                 <aside className="nota-fiscal__side">
                   <SectionCard className="nota-fiscal__actions" elevated>
-                    <Button
-                      className="nota-fiscal__download"
-                      disabled={isDownloading}
-                      onClick={() => void downloadPdf()}
-                    >
-                      {isDownloading ? 'Gerando PDF...' : 'Baixar PDF'}
-                    </Button>
+                    {paymentReturn === 'retorno' && !isConverted && (
+                      <p role="status">Pagamento enviado. A confirmacao pode levar alguns instantes. Atualize esta pagina para consultar a reserva.</p>
+                    )}
+                    {paymentReturn === 'cancelado' && (
+                      <p role="status">Pagamento cancelado. Voce pode tentar novamente enquanto a reserva estiver ativa.</p>
+                    )}
+                    {isConverted && (
+                      <p role="status">{apenasGratuitos
+                        ? 'Ingresso gratuito emitido. Confira o QR Code abaixo ou na área de perfil.'
+                        : 'Reserva convertida em pedido. Confira seu ingresso na área de perfil.'}</p>
+                    )}
+                    {reservation.status === 'ATIVA' && !isExpired && paymentReturn !== 'retorno' && (
+                      <Button disabled={isStartingPayment}
+                        onClick={() => void (apenasGratuitos ? issueFree() : startPayment())}>
+                        {isStartingPayment
+                          ? (apenasGratuitos ? 'Emitindo...' : 'Abrindo Stripe...')
+                          : (apenasGratuitos ? 'Emitir ingressos gratuitos' : 'Pagar com Stripe')}
+                      </Button>
+                    )}
+                    {codigoCupom && !checkoutResumo && (
+                      <p role="note">Cupom solicitado: {codigoCupom}. O valor final será recalculado ao abrir a Stripe.</p>
+                    )}
+                    {resumoError && <p role="alert">{resumoError}</p>}
+                    {checkoutError && <p role="alert">{checkoutError}</p>}
+                    {!isConverted && (
+                      <Button
+                        className="nota-fiscal__download"
+                        disabled={isDownloading}
+                        onClick={() => void downloadPdf()}
+                      >
+                        {isDownloading ? 'Gerando PDF...' : 'Baixar comprovante de reserva'}
+                      </Button>
+                    )}
                     {downloadError && (
                       <p className="nota-fiscal__download-error" role="alert">
                         {downloadError}
                       </p>
                     )}
-                    <Button className="nota-fiscal__email" variant="outline">
-                      <Icon name="mail" />
-                      Enviar para E-mail
-                    </Button>
                   </SectionCard>
 
                   <SectionCard
@@ -354,17 +507,21 @@ function NotaFiscal() {
                         {code}
                       </LabeledValue>
                       <LabeledValue label="Pagamento:">
-                        Não realizado
+                        {isConverted
+                          ? (apenasGratuitos ? 'Gratuito, sem cobrança' : 'Pedido confirmado')
+                          : 'Não confirmado'}
                       </LabeledValue>
                       <LabeledValue label="Criada em:" muted>
                         {formatDate(reservation.criadaEm)}
                       </LabeledValue>
-                      <LabeledValue label="Expira em:" muted>
-                        {formatDate(reservation.expiraEm)}
-                      </LabeledValue>
+                      {!isConverted && (
+                        <LabeledValue label="Expira em:" muted>
+                          {formatDate(reservation.expiraEm)}
+                        </LabeledValue>
+                      )}
                       <LabeledValue label="Status:">
                         <StatusBadge variant={isExpired ? 'danger' : 'success'}>
-                          {isExpired ? 'Expirada' : 'Ativa'}
+                          {isConverted ? 'Convertida' : isExpired ? 'Expirada' : 'Ativa'}
                         </StatusBadge>
                       </LabeledValue>
                     </div>

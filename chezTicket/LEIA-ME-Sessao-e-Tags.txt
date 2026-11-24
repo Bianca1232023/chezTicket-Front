@@ -1,0 +1,15 @@
+CHEZTICKET — Ajuste de aviso de sessão expirada e entrada de tags
+
+Atualização apenas do React (sem alterações no backend, SQL, Stripe ou Brevo).
+
+Instale na pasta raiz chezTicket-Front, descompactando este arquivo com overwrite.
+
+Após instalar: npm run build; npm run dev.
+
+Quando uma requisição autenticada receber HTTP 401, o site exibirá uma mensagem clara de sessão expirada, mostrará o formulário de login se necessário e retornará à rota protegida anterior quando o login for concluído.
+
+O aviso é mostrado quando o servidor responde 401 a uma requisição; ele não é um cronômetro que prevê a expiração. Formularios ainda não salvos não são preservados automaticamente ao reautenticar.
+
+O campo Tags tem botão Adicionar, Enter, virgula e confirmação ao sair do campo. Esta alteração não insere retroativamente tags em eventos já cadastrados.
+
+IMPORTANTE: Faça backup da pasta src antes de descompactar.

@@ -1,0 +1,25 @@
+chezTicket — Etapa 10B (parte 1): criar RASCUNHO completo e seguro
+
+Pré-requisito: Etapa 10A instalada e testada.
+
+O que altera:
+- Novo POST /api/eventos/completo, apenas ROLE_ORGANIZADOR e CSRF.
+- O organizadorId vem EXCLUSIVAMENTE da sessão, nunca da requisição.
+- Evento, local, sessão e tipos de ingresso são criados numa única transação.
+- O frontend pede Cidade e UF e permite salvar um rascunho.
+- Não publica nem expõe operações de edição, que continuam bloqueadas.
+
+LIMITES DESTA PRIMEIRA PARTE (não são descartados da versão final):
+- Upload de imagens, tags, redes sociais, cupons de organizador e janela de venda
+  ainda não são persistidos. O sistema informa e recusa solicitações com
+  esses campos para não parecer que foram salvos.
+- A publicação e edição serão tratadas em etapas separadas.
+- Não use para lançar eventos reais.
+
+Instalação: extraia o ZIP na raiz chezTicket-Front; recompilar backend e frontend.
+
+Teste: cadastrar rascunho como organizador, verificar tabelas evento/sessao/
+local/tipo_ingresso; tentar criar com comprador (403) e como anônimo (401).
+
+Use navegador no localhost:5173 com sua conta ORGANIZADOR.
+Não inclua credenciais em ZIPs de compartilhamento.

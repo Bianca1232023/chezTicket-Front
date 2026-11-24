@@ -1,3 +1,4 @@
+import fallbackImage from '../../assets/nota-fiscal/evento-festival.png'
 import './EventSummary.scss'
 
 type EventSummaryProps = {
@@ -17,7 +18,15 @@ function EventSummary({
 }: EventSummaryProps) {
   return (
     <div className="event-summary">
-      <img className="event-summary__image" src={image} alt={imageAlt} />
+      <img
+        className="event-summary__image"
+        src={image || fallbackImage}
+        alt={imageAlt}
+        onError={(event) => {
+          event.currentTarget.onerror = null
+          event.currentTarget.src = fallbackImage
+        }}
+      />
       <div className="event-summary__text">
         <span className="event-summary__category">{category}</span>
         <h3 className="event-summary__title">{title}</h3>

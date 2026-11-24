@@ -1,0 +1,38 @@
+CHEZTICKET — ETAPA 10B / AJUSTE VISUAL DA IMAGEM DE DIVULGACAO
+
+ESCOPO
+- Apenas frontend, na pasta src/ da raiz do projeto.
+- Nenhuma alteracao no backend, banco de dados, autenticacao, Stripe ou Brevo.
+
+ARQUIVOS MODIFICADOS
+1. src/components/EventStepPromotion/EventStepPromotion.tsx
+   - Mostra uma previa da imagem imediatamente na aba "Divulgacoes".
+   - Exibe "Imagem selecionada" e o nome do arquivo.
+   - Continua usando o arquivo e a URL de previa que ja existiam no estado do formulario.
+
+2. src/components/EventStepPromotion/EventStepPromotion.scss
+   - Estiliza a miniatura e a confirmacao de selecao, sem alterar os demais passos.
+
+APLICACAO (POWERSHELL DO VS CODE)
+1. Abra um terminal na raiz do frontend (onde esta package.json).
+2. Deixe este arquivo ZIP na pasta Downloads do Windows.
+3. Execute:
+   Expand-Archive -Path "$env:USERPROFILE\Downloads\AJUSTE-ETAPA-10B-PREVIA-DIVULGACAO.zip" -DestinationPath . -Force
+4. Verifique a compilacao:
+   npm run build
+5. Se necessitar iniciar o frontend:
+   npm run dev
+
+TESTE MANUAL
+1. Acesse o formulario de criacao de evento como organizador.
+2. Entre na aba Divulgacoes e selecione uma imagem JPG/PNG/WEBP de ate 5 MB.
+3. Confira a miniatura, a frase "Imagem selecionada" e o nome do arquivo nessa mesma aba.
+4. Selecione outra imagem: a miniatura e o nome devem mudar.
+5. Avance para Revisao, confira a imagem; volte a Divulgacoes e confira que a previa continua.
+6. Nao e necessario salvar outro evento para testar este ajuste visual.
+
+VALIDACAO NO AMBIENTE DE PREPARACAO
+- Compilacao TypeScript (tsc global 5.8.3): aprovada.
+- Compilacao Sass: aprovada.
+- Build completo Vite: nao executado por dependencias nativas Windows presentes no ZIP.
+- Teste no navegador: pendente.

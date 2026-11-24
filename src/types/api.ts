@@ -10,7 +10,8 @@ export type ApiUser = {
   id: number
   nome: string
   email: string
-  cpf: string
+  cpf: string | null
+  papeis: Array<'PARTICIPANTE' | 'ORGANIZADOR' | 'ADMINISTRADOR'>
 }
 
 export type ApiProfile = {
@@ -116,13 +117,14 @@ export type ApiEventSession = ApiSession & {
 }
 
 export type CreateCompleteEventRequest = {
-  organizadorId: number
   categoriaId: number
   titulo: string
   descricao: string
   classificacaoEtaria: string
   politicaReembolso: string
   endereco: string
+  cidade: string
+  uf: string
   inicio: string
   fim: string
   tags: string[]
@@ -144,10 +146,41 @@ export type CreateCompleteEventRequest = {
   publicar: boolean
 }
 
+export type ApiEditableDraft = {
+  id: number
+  status: string
+  categoriaId: number
+  titulo: string
+  descricao: string | null
+  endereco: string
+  cidade: string
+  uf: string
+  inicio: string
+  fim: string
+  imagemCapa: string | null
+  imagemDivulgacao: string | null
+  tags: string[]
+  redesSociais: Record<string, string>
+  ingressos: Array<{
+    id: number
+    nome: string
+    gratuito: boolean
+    preco: number
+    taxaServico: number
+    quantidadeTotal: number
+    limitePorCompra: number
+    inicioVendas: string | null
+    fimVendas: string | null
+  }>
+  cupom: { codigo: string; percentualDesconto: number } | null
+}
+
 export type ApiValidatedCoupon = {
   codigo: string
+  tipo: 'PERCENTUAL' | 'VALOR_FIXO'
+  valor: number
   percentualDesconto: number
-  validoAte: string
+  validoAte: string | null
 }
 
 export type ApiCreatedEvent = {

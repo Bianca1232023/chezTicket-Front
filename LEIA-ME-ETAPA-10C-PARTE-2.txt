@@ -1,0 +1,111 @@
+CHEZTICKET - ETAPA 10C / PARTE 2
+PUBLICACAO DE RASCUNHOS E VISIBILIDADE DO CATALOGO
+===================================================
+
+OBJETIVO
+--------
+Permitir que o organizador publique um rascunho completo, mantendo a
+integridade dos ingressos e impedindo a exposicao de rascunhos a terceiros.
+
+ALTERACOES NO BACKEND
+---------------------
+1. PublicarRascunhoService.java (novo)
+   - Publica apenas rascunho pertencente ao organizador autenticado e ativo.
+   - Bloqueia o registro do evento durante a verificacao e a transicao.
+   - Valida descricao, capa, sessoes futuras, locais, tipos de ingressos,
+     precos, quantidades, capacidade e janelas de venda.
+   - Reutiliza o ciclo de vida existente, mantendo data_publicacao.
+   - Retorna 404 a outro organizador, 409 para evento que nao e rascunho e
+     422 quando faltam dados exigidos para a publicacao.
+2. EventoController.java
+   - O POST /api/eventos/{id}/publicacao utiliza a verificacao do organizador.
+3. SecurityConfig.java
+   - Somente ORGANIZADOR autenticado pode chamar o POST de publicacao.
+4. VisibilidadeCatalogoService.java (novo)
+   - Restringe a leitura de sessoes, ingressos e locais associados a
+     rascunhos aos respectivos organizadores.
+5. SessaoController.java, TipoIngressoController.java, LocalController.java
+   - Aplicam a verificacao de visibilidade nas rotas GET de lista/detalhe.
+6. TipoIngressoResponse.java e TipoIngressoController.java
+   - As consultas de ingressos retornam inicioVendas e fimVendas,
+     utilizando os campos existentes da tabela tipo_ingresso.
+
+ALTERACOES NO FRONTEND
+----------------------
+1. CriarEvento.tsx
+   - Habilita Publicar para rascunho ja salvo; exige confirmacao.
+   - Impede a publicacao com alteracoes nao salvas.
+   - Mantem a edicao de rascunhos e a mensagem de sucesso existentes.
+2. EventStepReview.tsx
+   - Exibe o botao Publicar apos o salvamento.
+   - Apos a publicacao, disponibiliza Ver evento e o link correto do site.
+3. ingresso-vendas.ts (novo)
+   - Identifica ingressos em venda pela data local e disponibilidade.
+4. DetalhesEvento.tsx, CompraEvento.tsx, ExplorarEventos.tsx
+   - Escondem opcoes de compra fora da janela de venda e em sessoes passadas.
+   - O backend continua a validar definitivamente a data na reserva.
+
+NAO ALTERADO
+------------
+- Schema do MariaDB; nenhuma migracao Flyway nova.
+- Checkout Stripe, webhooks, pagamentos, cupons e emissao de ingressos.
+- Arquivos das correcoes das Etapas 10B e 10C Parte 1.
+- Repositorios remotos e configuracoes de producao.
+
+APLICACAO LOCAL (POWERSHELL)
+----------------------------
+1. Criar backup do frontend e backend, incluindo o banco MariaDB via Adminer.
+2. Deixar o ZIP AJUSTE-ETAPA-10C-PARTE-2-PUBLICACAO.zip em Downloads.
+3. Na raiz chezTicket-Front (onde existe package.json):
+
+   Expand-Archive -LiteralPath "$env:USERPROFILE\Downloads\AJUSTE-ETAPA-10C-PARTE-2-PUBLICACAO.zip" -DestinationPath . -Force
+   npm run build
+
+4. Compilar e testar o backend:
+
+   cd chezTicket
+   docker compose build backend
+   docker run --rm -v "${PWD}\backend:/workspace" -w /workspace maven:3.9-eclipse-temurin-17 mvn -B test
+   docker compose up -d --force-recreate backend
+   docker compose ps
+   cd ..
+
+INTERROMPER A INSTALACAO SE QUALQUER BUILD OU TESTE FALHAR.
+
+ROTEIRO DE VALIDACAO (EM ETAPAS, SEM PUBLICAR EVENTO ID 5)
+-----------------------------------------------------------
+A. Criar um NOVO evento de teste completo, com capa, descricao, sessao
+   futura, local e ingressos. Salvar como RASCUNHO.
+B. Confirmar via SQL que o status e RASCUNHO e data_publicacao e NULL.
+   Verificar que, sem login, o evento nao aparece em GET /api/eventos
+   nem seus detalhes de sessao e ingresso ficam acessiveis.
+C. Reabrir o rascunho com o organizador correto. Ir ate Revisao,
+   clicar Publicar e confirmar. Aguardar mensagem de sucesso.
+D. Confirmar no MariaDB status PUBLICADO e data_publicacao preenchida.
+   Em janela anonima, conferir aparicao no catalogo e detalhes do evento.
+E. Testar as janelas de venda (o ingresso fora do periodo nao deve
+   oferecer compra). A API de reservas continua autoritativa.
+F. Testar que outro organizador nao consegue publicar o mesmo evento:
+   HTTP 404, sem alteracao do registro.
+G. Testar que uma segunda publicacao retorna HTTP 409 e mantem o evento.
+
+CONSULTA DE CONFERENCIA
+-----------------------
+SELECT id, titulo, organizador_id, status, data_publicacao
+FROM evento
+WHERE id = <ID_DO_EVENTO_DE_TESTE>;
+
+LIMITES E PROXIMAS ETAPAS
+------------------------
+- Apos publicar, o evento nao pode mais ser editado como rascunho.
+- A Etapa 10C Parte 3 validara o fluxo integrado de publicacao e compra.
+- Validacao presencial de QR Code fica na Etapa 11.
+- Cancelamentos/reembolsos ficam na Etapa 12.
+- Testes abrangentes de seguranca ficam na Etapa 14.
+
+VALIDACAO REALIZADA NA PREPARACAO
+--------------------------------
+- TypeScript: tsc -b passou.
+- Sintaxe dos 8 arquivos Java novos/modificados: parser javac Java 17 passou.
+- Maven, Docker e testes integrados com MariaDB: nao executados neste
+  ambiente; executar no Windows antes de publicar eventos.

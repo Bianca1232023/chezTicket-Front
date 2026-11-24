@@ -1,0 +1,23 @@
+Etapa 3 - Checkout Stripe autenticado no React (teste)
+
+CONTEUDO
+- Novo PedidoCheckoutController.java: POST /api/checkout autentica titular.
+- SecurityConfig.java: libera a nova rota so para usuario autenticado.
+- PedidoCheckoutService.java: retoma pedidos pendentes e evita sessoes duplicadas em cliques repetidos.
+- StripeCheckoutService.java: usa retorno com hash router do React e reservaId.
+- Novo checkout-service.ts: chamada autenticada via http-client com CSRF.
+- NotaFiscal.tsx: botao Pagar com Stripe, estados basicos e bloqueio temporario de cupons.
+
+Este pacote pressupoe aplicadas as Etapas 1 e 2 anteriormente fornecidas.
+NENHUMA chave, .env, arquivo de banco ou migracao incluido.
+Backup antes de descompactar. Se SecurityConfig.java foi modificado apos Etapa 2, faca mesclagem.
+
+Na pasta chezTicket:
+  docker compose build backend
+  docker run --rm -v "${PWD}\backend:/workspace" -w /workspace maven:3.9-eclipse-temurin-17 mvn -B test
+  docker compose up -d --force-recreate backend
+Na pasta frontend (cd ..):
+  npm run build
+
+MODO DE TESTE SOMENTE: existem pendencias antes de producao, especialmente
+concorrencia, conciliacao de pedidos sem sessao e exibicao de ingressos emitidos.

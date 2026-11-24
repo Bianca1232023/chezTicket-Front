@@ -18,6 +18,7 @@ type EventStepTicketsProps = {
     updates: Partial<EventTicketDraft>,
   ) => void
   onTicketRemove: (index: number) => void
+  onTicketAdd: () => void
   onCouponChange: (
     updates: Partial<Pick<EventDraft, 'couponEnabled' | 'couponDiscountPercent' | 'couponCode'>>,
   ) => void
@@ -90,6 +91,7 @@ function EventStepTickets({
   couponError,
   onTicketChange,
   onTicketRemove,
+  onTicketAdd,
   onCouponChange,
   onBack,
   onNext,
@@ -113,15 +115,32 @@ function EventStepTickets({
 
             return (
               <EventTicketCard
-                key={ticket.name}
+                key={ticket.id ?? `novo-${index}`}
                 icon={icon}
                 title={ticket.name}
                 description={description}
                 canRemove={tickets.length > 1}
                 onRemove={() => onTicketRemove(index)}
               >
+                <EventField
+                  label="Nome do ingresso" requirement="publication"
+                  htmlFor={`${idPrefix}-nome`}
+                  variant="muted"
+                >
+                  <EventInput
+                    id={`${idPrefix}-nome`}
+                    type="text"
+                    maxLength={80}
+                    required
+                    placeholder="Ex.: Ingresso VIP"
+                    value={ticket.name}
+                    onChange={(event) =>
+                      onTicketChange(index, { name: event.target.value })
+                    }
+                  />
+                </EventField>
                 {!free && (
-                  <EventField label="Preço" htmlFor={`${idPrefix}-preco`} variant="muted">
+                  <EventField label="Preço" requirement="publication" htmlFor={`${idPrefix}-preco`} variant="muted">
                     <EventInput
                       id={`${idPrefix}-preco`}
                       type="text"
@@ -133,7 +152,7 @@ function EventStepTickets({
                   </EventField>
                 )}
                 <EventField
-                  label="Quantidade disponível"
+                  label="Quantidade disponível" requirement="publication"
                   htmlFor={`${idPrefix}-quantidade`}
                   variant="muted"
                 >
@@ -148,7 +167,7 @@ function EventStepTickets({
                 </EventField>
                 {!free && (
                   <EventField
-                    label="Taxa de serviço"
+                    label="Taxa de serviço" requirement="publication"
                     htmlFor={`${idPrefix}-taxa`}
                     variant="muted"
                   >
@@ -164,7 +183,7 @@ function EventStepTickets({
                   </EventField>
                 )}
                 <EventField
-                  label="Limite por compra"
+                  label="Limite por compra" requirement="publication"
                   htmlFor={`${idPrefix}-limite`}
                   variant="muted"
                 >
@@ -179,7 +198,7 @@ function EventStepTickets({
                   />
                 </EventField>
                 <EventField
-                  label="Início das vendas"
+                  label="Início das vendas (data inclusiva)" requirement="optional"
                   htmlFor={`${idPrefix}-inicio`}
                   variant="muted"
                 >
@@ -190,7 +209,7 @@ function EventStepTickets({
                   />
                 </EventField>
                 <EventField
-                  label="Encerramento das Vendas"
+                  label="Encerramento das Vendas (data inclusiva)" requirement="optional"
                   htmlFor={`${idPrefix}-fim`}
                   variant="muted"
                 >
@@ -204,6 +223,11 @@ function EventStepTickets({
             )
           })}
         </div>
+        {tickets.length < 20 && (
+          <button type="button" className="event-step-tickets__add" onClick={onTicketAdd}>
+            + Adicionar tipo de ingresso
+          </button>
+        )}
         {tickets.length === 1 && (
           <p className="event-step-tickets__remove-notice" role="note">
             Mantenha ao menos um tipo de ingresso para continuar.
@@ -213,7 +237,7 @@ function EventStepTickets({
 
       <EventPanel title="Cupom de desconto" className="event-step-tickets__coupon-panel">
         <fieldset className="event-step-tickets__coupon-choice">
-          <legend>Deseja oferecer um cupom para este evento?</legend>
+          <legend>Deseja oferecer um cupom para este evento? (opcional)</legend>
           <label>
             <input
               type="radio"
@@ -236,7 +260,7 @@ function EventStepTickets({
 
         {couponEnabled && (
           <div className="event-step-tickets__coupon-fields">
-            <EventField label="Desconto (%)" htmlFor="coupon-discount" variant="muted">
+            <EventField label="Desconto (%)" requirement="publication" htmlFor="coupon-discount" variant="muted">
               <EventInput
                 id="coupon-discount"
                 type="number"
@@ -250,7 +274,7 @@ function EventStepTickets({
               />
             </EventField>
             <EventField
-              label="Código do cupom (8 caracteres alfanuméricos)"
+              label="Código do cupom (8 caracteres alfanuméricos)" requirement="publication"
               htmlFor="coupon-code"
               variant="muted"
             >

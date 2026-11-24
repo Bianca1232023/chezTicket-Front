@@ -1,0 +1,49 @@
+CHEZTICKET — AJUSTE LOCAL: SESSAO EXPIRADA E ENTRADA DE TAGS
+
+ESCOPO
+- Alteracoes somente no frontend React, em src/ (raiz de chezTicket-Front).
+- Nenhuma alteracao em backend, MariaDB, Stripe, Brevo ou dependencias.
+
+ALTERACOES
+1. src/services/api/http-client.ts
+   - Identifica HTTP 401 em requisicoes autenticadas e em falha na obtencao de CSRF.
+   - Emite evento interno de sessao expirada e retorna mensagem de reautenticacao.
+   - Mantem o tratamento de credenciais incorretas em login/cadastro separado.
+
+2. src/context/AuthContext.tsx
+   - Escuta o evento de sessao expirada, limpa o usuario autenticado e apresenta aviso.
+   - O aviso e removido apos login/cadastro bem-sucedido ou logout explicito.
+
+3. src/styles/components/session-expired.scss (novo)
+   - Estilo isolado do aviso de sessao expirada.
+
+4. src/App.tsx e src/pages/Login/Login.tsx
+   - Permitem reautenticar nas paginas protegidas e permanecer na rota atual apos login.
+   - O login acessado pelo menu continua levando a pagina inicial.
+
+5. src/components/EventTagInput/EventTagInput.tsx e EventTagInput.scss
+   - Adiciona tag por Enter, virgula, botao Adicionar ou ao sair do campo.
+   - Respeita limites de 10 tags e 40 caracteres; evita duplicatas ignorando maiusculas/minusculas.
+   - Mantem a remocao da ultima tag com Backspace quando o campo esta vazio.
+
+APLICACAO LOCAL
+1. Faça uma copia de seguranca da pasta src da raiz do projeto.
+2. Extraia o ZIP na raiz de chezTicket-Front, substituindo os arquivos correspondentes.
+   A pasta chezTicket/src, existente no backend, NAO deve ser usada como destino.
+3. Execute na raiz do frontend:
+     npm run build
+     npm run dev
+
+VALIDACAO MANUAL
+- Em uma pagina protegida, invalide/expire a sessao no backend e dispare uma requisicao.
+  Deve aparecer aviso claro e formulario de login; apos entrar, a rota e mantida.
+- Teste login com senha errada: nao deve exibir aviso de sessao expirada.
+- No cadastro de evento, teste tags por Enter, virgula, botao e perda de foco.
+  Salve um novo rascunho e confira os registros em evento_tag no MariaDB.
+- Tags nao sao adicionadas retroativamente a eventos ja salvos.
+
+LIMITACOES
+- O aviso depende de uma resposta HTTP 401; nao ha cronometro de expiracao.
+- Campos de formularios nao salvos nao sao preservados automaticamente apos reautenticacao.
+- Validacao local: TypeScript e SCSS compilados; empacotamento Vite e testes com
+  banco/servidor nao executados neste ambiente por dependencias nativas Windows no ZIP.

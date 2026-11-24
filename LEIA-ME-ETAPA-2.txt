@@ -1,0 +1,27 @@
+chezTicket - Etapa 2: GET /api/perfil
+
+CONTEUDO: somente 2 arquivos Java.
+
+1. chezTicket/backend/src/main/java/com/chezticket/perfil/PerfilController.java
+   NOVO. Retorna {usuario, eventos, reservas} com os tipos esperados pelo React,
+   filtrados pelo usuario autenticado na sessao. Nao recebe participanteId.
+
+2. chezTicket/backend/src/main/java/com/chezticket/auth/SecurityConfig.java
+   ALTERADO. Permite GET /api/perfil apenas para usuario autenticado.
+   O restante da configuracao de seguranca permanece igual ao pacote da Etapa 1.
+
+APLICACAO: extrair na pasta raiz chezTicket-Front, que contem a pasta chezTicket.
+Nao sobrescrever arquivos pessoais diferentes dos do pacote anterior sem comparar.
+
+TESTES:
+  docker compose build backend
+  docker run --rm -v "${PWD}\backend:/workspace" -w /workspace maven:3.9-eclipse-temurin-17 mvn -B test
+  docker compose up -d --force-recreate backend
+  curl.exe http://localhost:8081/actuator/health
+
+No browser logado no React:
+  http://localhost:5173/api/perfil
+Esperado: JSON com usuario, eventos e reservas. Conta nova -> listas vazias.
+No browser anonimo (janela privada): HTTP 401.
+
+NAO altera Stripe, banco, Docker, frontend, Flyway nem arquivos .env.

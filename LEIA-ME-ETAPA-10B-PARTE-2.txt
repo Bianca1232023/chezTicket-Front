@@ -1,0 +1,37 @@
+chezTicket — Etapa 10B Parte 2 — Janelas de venda e cupom por evento
+
+PRE-REQUISITOS: Etapas 1 a 10B Parte 1 (rascunho) já instaladas.
+
+Este pacote inclui migracao V9 (novas colunas opcionais, sem apagar registros).
+NÃO execute SQL manual: Flyway aplica a migração quando backend iniciar.
+
+- Formulário permite início/fim de vendas por ingresso (datas inclusivas, somente dia).
+- As datas devem ser cronologicamente válidas e até a data do evento.
+- O backend verifica datas e status PUBLICADO na hora de reservar.
+- Cupom percentual 1-99% com código de 8 caracteres, gravado com evento_id.
+- Cupons globais antigos (evento_id NULL, como TESTE010) seguem válidos.
+- Cupom de um evento não pode ser usado em outro (nem em reserva mista).
+- Rascunhos continuam invisíveis ao público e sem publicação habilitada.
+- Imagens, tags, redes sociais e publicação ainda não são persistidos.
+- Cupom de 100% ainda exige implementação do fluxo de pedido zerado.
+
+NOTA: As janelas nesta atualização usam a DATA COMPLETA (não o horário).
+O período inclui os dias de início e fim. Para horários específicos,
+isso será ampliado na interface e no backend na etapa de edição.
+
+INSTALAR (na pasta chezTicket):
+  Expand-Archive -LiteralPath "$env:USERPROFILE\Downloads\chezTicket_etapa10b2_vendas_cupons.zip" -DestinationPath (Resolve-Path ..).Path -Force
+  docker compose build backend
+  docker run --rm -v "${PWD}\backend:/workspace" -w /workspace maven:3.9-eclipse-temurin-17 mvn -B test
+  docker compose up -d --force-recreate backend
+  cd ..
+  npm run build
+
+TESTES:
+1. Crie um novo RASCUNHO com período de venda e cupom 10%.
+2. Confira em tipo_ingresso.inicio_vendas/fim_vendas e cupom.evento_id.
+3. Rascunho deve continuar inacessível a visitantes.
+4. A validação de reservas contra datas de venda exige um evento PUBLICADO;
+   NÃO publique manualmente nem execute UPDATE em eventos/estoques.
+5. Antes de produzir vendas reais, valide também janelas, falhas de Pix,
+   concorrência, e cupons de 100% em testes integrados.

@@ -1,0 +1,63 @@
+chezTicket - Etapa 9: E-mail automatico de ingressos com Brevo SMTP
+=================================================================
+
+COMPATIBILIDADE
+- Preparado sobre os arquivos de referencia originais com os pacotes 1 a 8
+  aplicados em ordem, inclusive a correcao Pix expirado.
+- A alteracao manual que adicionou PIX em StripeCheckoutService.java NAO e
+  sobrescrita por este pacote.
+- O arquivo .env nao e incluido nem alterado pelo ZIP.
+
+O QUE INCLUI
+- spring-boot-starter-mail + ZXing para QR PNG real dos ingressos.
+- Flyway V8: tabela de fila email_ingresso_envio (sem senhas e sem QR).
+- Registra na fila APENAS depois de emitir ingressos pagos ou gratuitos.
+- Agendador SMTP: limite de 5 tentativas, atraso progressivo, trava por tarefa.
+- Um e-mail por pedido, todos os ingressos, QR PNG no corpo e em anexo.
+- Botao de reenvio no perfil (somente pedido do comprador autenticado).
+- Reenvio: destino e sempre o e-mail ja cadastrado, max 3/dia e intervalo 5 min.
+- Backend so envia se CHEZTICKET_EMAIL_ATIVO=true no .env.
+
+INSTALAR (PowerShell na pasta chezTicket)
+1. Backup dos arquivos atuais (recomendado):
+  $backup = "$env:USERPROFILE\\backup-chezticket-etapa9-$(Get-Date -Format 'yyyyMMdd-HHmmss').zip"
+  Compress-Archive -Path .\\backend\\src, .\\backend\\pom.xml, .\\docker-compose.yml, ..\\src -DestinationPath $backup
+2. Extrair na raiz do projeto frontend:
+  Expand-Archive -LiteralPath "$env:USERPROFILE\\Downloads\\chezTicket_etapa9_email_brevo.zip" -DestinationPath (Resolve-Path ..).Path -Force
+3. Ainda sem ativar SMTP, compilar backend e frontend:
+  docker compose build backend
+  docker run --rm -v "${PWD}\\backend:/workspace" -w /workspace maven:3.9-eclipse-temurin-17 mvn -B test
+  cd ..
+  npm run build
+4. Configurar em chezTicket/.env (NAO colocar no React, NAO colar as chaves no chat):
+  BREVO_SMTP_LOGIN=login_mostrado_pela_Brevo
+  BREVO_SMTP_KEY='chave_SMTP_mostrada_pela_Brevo'
+  CHEZTICKET_EMAIL_REMETENTE=remetente_verificado_na_Brevo
+  CHEZTICKET_EMAIL_ATIVO=true
+  Notas: use sua chave SMTP, nao sua chave de API; o remetente deve existir.
+5. Na pasta chezTicket, executar:
+  docker compose up -d --force-recreate backend
+  docker compose logs --tail 80 backend
+6. Login no React e em Meus ingressos, clicar Reenviar ingressos por e-mail
+   em um pedido pago ou gratuito JA emitido (de preferencia para seu e-mail).
+   Novos pedidos serao enfileirados automaticamente apos emitir ingressos.
+7. Consultar MariaDB no Adminer:
+  SELECT pedido_id,status,tentativas,enviado_em,ultimo_erro
+    FROM email_ingresso_envio
+   ORDER BY id DESC LIMIT 10;
+  ESPERADO: ENVIADO; consulte tambem a caixa de spam.
+
+TESTE SEGURO
+- Nao e necessario pagar novamente: reenvie um ingresso de teste ja emitido.
+- SMTP aceito nao garante entrega na caixa de entrada: verifique a Brevo.
+- Nao e garantido exatamente um e-mail em caso de queda da aplicacao ENTRE
+  o SMTP aceitar o envio e o banco registrar ENVIADO. A fila reduz duplicatas.
+- Se falhar repetidamente, volte CHEZTICKET_EMAIL_ATIVO=false e reinicie backend.
+- A migracao V8 cria uma tabela; nao edite migracoes anteriores.
+- A funcao de reenvio usa POST /api/ingressos/reenviar com CSRF e sessao.
+- Nunca compartilhe .env, chave SMTP nem seu QR em capturas publicas.
+
+OBSERVACAO DE BUILD
+- A checagem TypeScript (tsc --noEmit) passou no ambiente de preparacao.
+- O ambiente de preparacao nao tem Maven nem internet para dependencias novas.
+  A compilacao Java real e os testes precisam passar no seu Docker Windows.

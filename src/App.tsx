@@ -30,6 +30,7 @@ function AppRoutes() {
       return (
         <Login
           onNavigateToRegister={() => navigate('cadastro')}
+          onSuccess={() => undefined}
         />
       )
     }

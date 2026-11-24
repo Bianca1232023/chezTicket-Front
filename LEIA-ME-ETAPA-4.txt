@@ -1,0 +1,33 @@
+chezTicket - Etapa 4 - Ingressos emitidos ao comprador (modo de teste)
+
+Base: ZIP original da conversa + pacotes anteriores Etapas 1, 2 e 3.
+Sem arquivos .env, sem segredos, sem migracoes, sem mudar Stripe.
+
+Arquivos modificados:
+- chezTicket/backend/src/main/java/com/chezticket/auth/SecurityConfig.java
+- src/pages/NotaFiscal/NotaFiscal.tsx
+- src/pages/Perfil/Perfil.tsx
+- src/styles/pages/nota-fiscal.scss
+- src/styles/pages/perfil.scss
+
+Arquivos adicionados:
+- chezTicket/backend/src/main/java/com/chezticket/ingressos/IngressoController.java
+- src/services/api/ticket-service.ts
+
+Seguranca: GET /api/ingressos exige sessao e filtra pelo usuario_id da sessao;
+so retorna ingressos EMITIDOS de pedidos PAGO/CONCLUIDO com pagamento APROVADO.
+Nao ha nenhum endpoint para consultar ingressos de outro participante.
+
+Instalacao: extraia o ZIP na raiz chezTicket-Front (um nivel ACIMA da pasta chezTicket),
+com backup previo. Compile backend e frontend, reinicie backend, recarregue React.
+
+Testes: login como o comprador do Pedido 4, abrir /api/ingressos, conferir
+os QR reais na aba Meus ingressos e na pagina do comprovante da Reserva 5.
+Em janela anonima /api/ingressos deve devolver 401. Uma conta diferente
+nao deve receber o ingresso do Pedido 4.
+
+Limitacoes: QR de codigo original do banco nao e nota fiscal; exige check-in
+que valide codigo no servidor antes de permitir entrada. Nao aborda reembolso,
+transferencia, compras live, fluxo de organizador ou imagens quebradas.
+
+Nao publique o ZIP original que continha .env.

@@ -9,6 +9,7 @@ import EventInfoCard from '../../components/EventInfoCard/EventInfoCard'
 import Header from '../../components/Header/Header'
 import Icon from '../../components/Icon/Icon'
 import { useEventDetails } from '../../hooks/useEventDetails'
+import { ingressoEmVenda } from '../../utils/ingresso-vendas'
 import { useCategories } from '../../hooks/useCategories'
 import { useEvents } from '../../hooks/useEvents'
 import { routeHref } from '../../hooks/useRoute'
@@ -30,7 +31,8 @@ const formatCurrency = (amount: number) =>
 
 const scheduledSessions = (sessions: ApiEventSession[] | undefined) =>
   (sessions ?? [])
-    .filter((session) => session.status === 'AGENDADA')
+    .filter((session) => session.status === 'AGENDADA' &&
+      new Date(session.inicio).getTime() > Date.now())
     .sort((first, second) => first.inicio.localeCompare(second.inicio))
 
 const formatEventDates = (sessions: ApiEventSession[]) => {
@@ -119,7 +121,8 @@ function ExploreEventCard({
   const details = useEventDetails(String(event.id))
   const sessions = scheduledSessions(details.data?.sessions)
   const ticketTypes = sessions.flatMap((session) => session.tiposIngresso)
-  const prices = ticketTypes.map((ticket) => ticket.gratuito ? 0 : ticket.preco)
+  const ticketsEmVenda = ticketTypes.filter((ticket) => ingressoEmVenda(ticket))
+  const prices = ticketsEmVenda.map((ticket) => ticket.gratuito ? 0 : ticket.preco)
   const minimumPrice = prices.length ? Math.min(...prices) : null
   const soldOut =
     event.status === 'ESGOTADO' ||

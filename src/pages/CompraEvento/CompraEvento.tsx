@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Header from '../../components/Header/Header'
 import PageTitleBar from '../../components/PageTitleBar/PageTitleBar'
 import SectionCard from '../../components/SectionCard/SectionCard'
 import TicketOption from '../../components/TicketOption/TicketOption'
 import OrderSummary from '../../components/OrderSummary/OrderSummary'
-import PaymentCard, { type CardBrand } from '../../components/PaymentCard/PaymentCard'
 import EventField from '../../components/EventField/EventField'
 import EventInput from '../../components/EventInput/EventInput'
 import { useAuth } from '../../context/AuthContext'
 import { useEventDetails } from '../../hooks/useEventDetails'
+import { ingressoEmVenda } from '../../utils/ingresso-vendas'
 import { navigate, routeHref, useRouteParam } from '../../hooks/useRoute'
 import { profileService } from '../../services/api/profile-service'
 import { couponService } from '../../services/api/coupon-service'
@@ -21,43 +21,6 @@ const formatBRL = (value: number) =>
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(value))
-
-const eloPrefixes = [
-  '401178', '401179', '431274', '438935', '451416', '457393', '457631', '457632',
-  '504175', '627780', '636297', '636368',
-]
-const eloRanges = [
-  [506699, 506778], [509000, 509999], [650031, 650033], [650035, 650051],
-  [650405, 650439], [650485, 650538], [650541, 650598], [650700, 650718],
-  [650720, 650727], [650901, 650920], [651652, 651679], [655000, 655019],
-  [655021, 655058],
-]
-
-const identifyCardBrand = (value: string): CardBrand | null => {
-  const digits = value.replace(/\D/g, '')
-  if (!digits) return null
-
-  if (digits.length >= 6) {
-    const firstSix = Number(digits.slice(0, 6))
-    if (
-      eloPrefixes.some((prefix) => digits.startsWith(prefix))
-      || eloRanges.some(([start, end]) => firstSix >= start && firstSix <= end)
-    ) {
-      return 'Elo'
-    }
-    if (digits.startsWith('606282')) return 'Hipercard'
-  }
-
-  if (digits.startsWith('4')) return 'Visa'
-  if (/^3[47]/.test(digits)) return 'American Express'
-  if (/^5[1-5]/.test(digits)) return 'Mastercard'
-  if (digits.length >= 4) {
-    const firstFour = Number(digits.slice(0, 4))
-    if (firstFour >= 2221 && firstFour <= 2720) return 'Mastercard'
-  }
-
-  return digits.length >= 6 ? 'Outra bandeira' : null
-}
 
 function CompraEvento() {
   const eventId = useRouteParam('eventoId')
@@ -72,25 +35,6 @@ function CompraEvento() {
   const [couponError, setCouponError] = useState<string | null>(null)
   const [couponMessage, setCouponMessage] = useState<string | null>(null)
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<'credit' | 'debit'>('credit')
-  const [cardNumber, setCardNumber] = useState('')
-  const [cardExpiry, setCardExpiry] = useState('')
-  const [cardCvv, setCardCvv] = useState('')
-  const cardDigits = cardNumber.replace(/\D/g, '')
-  const cardBrand = identifyCardBrand(cardDigits)
-  const maskedCardNumber = cardDigits.length >= 4
-    ? `•••• •••• •••• ${cardDigits.slice(-4)}`
-    : '•••• •••• •••• ••••'
-
-  useEffect(() => {
-    setCouponCode('')
-    setValidatedCoupon(null)
-    setCouponError(null)
-    setCouponMessage(null)
-    setCardNumber('')
-    setCardExpiry('')
-    setCardCvv('')
-  }, [eventId])
 
   if (!eventId || !/^\d+$/.test(eventId)) {
     return (
@@ -130,10 +74,14 @@ function CompraEvento() {
     )
   }
 
-  const selectedSession = data.sessions.find((session) => String(session.id) === sessionId)
-    ?? data.sessions.find((session) => session.status === 'AGENDADA')
-  const tickets = selectedSession?.tiposIngresso.filter((ticket) => ticket.quantidadeDisponivel > 0) ?? []
+  const sessoesFuturas = data.sessions.filter((session) =>
+    session.status === 'AGENDADA' && new Date(session.inicio).getTime() > Date.now())
+  const selectedSession = sessoesFuturas.find((session) => String(session.id) === sessionId)
+    ?? sessoesFuturas[0]
+  // Ingressos gratuitos podem ser emitidos sem Stripe; pedidos pagos seguem para o Checkout.
+  const tickets = selectedSession?.tiposIngresso.filter((ticket) => ingressoEmVenda(ticket)) ?? []
   const selectedTickets = tickets.filter((ticket) => (quantities[ticket.id] ?? 0) > 0)
+  const apenasGratuitos = selectedTickets.length > 0 && selectedTickets.every((ticket) => ticket.gratuito)
   const ticketSubtotal = selectedTickets.reduce(
     (sum, ticket) => sum + (ticket.gratuito ? 0 : ticket.preco * quantities[ticket.id]),
     0,
@@ -143,7 +91,10 @@ function CompraEvento() {
     0,
   )
   const couponDiscount = validatedCoupon
-    ? Math.round(ticketSubtotal * validatedCoupon.percentualDesconto) / 100
+    ? Math.min(ticketSubtotal,
+        validatedCoupon.tipo === 'PERCENTUAL'
+          ? Math.round(ticketSubtotal * validatedCoupon.valor) / 100
+          : validatedCoupon.valor)
     : 0
   const total = ticketSubtotal - couponDiscount + serviceFeeTotal
   const sessionStart = selectedSession?.inicio
@@ -152,28 +103,23 @@ function CompraEvento() {
     setCouponError(null)
     setCouponMessage(null)
     setValidatedCoupon(null)
-    setSubmitError(null)
-
     if (!user) {
       setCouponError('Entre na sua conta para validar o cupom.')
       return
     }
-    if (!/^[A-Za-z0-9]{8}$/.test(couponCode)) {
-      setCouponError('Digite um código com exatamente 8 caracteres alfanuméricos.')
+    if (!/^[A-Za-z0-9]{4,40}$/.test(couponCode)) {
+      setCouponError('Use de 4 a 40 letras ou números no código.')
       return
     }
-
     setIsValidatingCoupon(true)
     try {
       const coupon = await couponService.validate(Number(eventId), couponCode)
       setValidatedCoupon(coupon)
-      setCouponMessage(
-        `Cupom aplicado: ${coupon.percentualDesconto}% de desconto nos ingressos.`,
-      )
+      setCouponMessage(coupon.tipo === 'PERCENTUAL'
+        ? `Cupom validado: ${coupon.valor}% de desconto nos ingressos.`
+        : `Cupom validado: ${formatBRL(coupon.valor)} de desconto nos ingressos.`)
     } catch (reason) {
-      setCouponError(
-        reason instanceof Error ? reason.message : 'Não foi possível validar o cupom.',
-      )
+      setCouponError(reason instanceof Error ? reason.message : 'Não foi possível validar o cupom.')
     } finally {
       setIsValidatingCoupon(false)
     }
@@ -188,6 +134,10 @@ function CompraEvento() {
       setCouponError('Aplique o cupom antes de continuar.')
       return
     }
+    if (validatedCoupon && total <= 0) {
+      setSubmitError('Cupom que zera o valor de ingressos pagos ainda não é permitido. Ingressos gratuitos não precisam de cupom.')
+      return
+    }
     setSubmitError(null)
     setIsSubmitting(true)
     try {
@@ -196,13 +146,13 @@ function CompraEvento() {
           tipoIngressoId: ticket.id,
           quantidade: quantities[ticket.id],
         })),
-        validatedCoupon
-          ? { eventoId: Number(eventId), codigo: validatedCoupon.codigo }
-          : undefined,
       )
       navigate('nota-fiscal', {
         reservaId: reservation.id,
-        descontoCentavos: Math.round(couponDiscount * 100),
+        ...(validatedCoupon ? {
+          codigoCupom: validatedCoupon.codigo,
+          descontoCentavos: Math.round(couponDiscount * 100),
+        } : {}),
       })
     } catch (reason) {
       setSubmitError(reason instanceof Error ? reason.message : 'Não foi possível reservar os ingressos.')
@@ -218,18 +168,14 @@ function CompraEvento() {
       value: formatBRL(unitPrice * quantities[ticket.id]),
     }
   })
-  if (couponDiscount > 0 && validatedCoupon) {
-    lines.push({
-      label: `Cupom ${validatedCoupon.codigo} (${validatedCoupon.percentualDesconto}%)`,
-      value: `-${formatBRL(couponDiscount)}`,
-    })
+  if (validatedCoupon && couponDiscount > 0) {
+    lines.push({ label: `Cupom ${validatedCoupon.codigo}`, value: `-${formatBRL(couponDiscount)}` })
   }
-
   return (
     <>
       <Header />
       <main className="compra-evento">
-        <PageTitleBar title="Reservar ingressos" badge="Reserva sem cobrança online" />
+        <PageTitleBar title="Reservar ingressos" badge="Ingressos gratuitos e pagamentos pela Stripe" />
         <div className="compra-evento__container">
           <div className="compra-evento__steps">
             <SectionCard elevated title="1. Ingressos disponíveis">
@@ -256,55 +202,32 @@ function CompraEvento() {
 
             <SectionCard title="Cupom de desconto">
               <div className="compra-evento__coupon">
-                <EventField
-                  label="Código do cupom (8 caracteres alfanuméricos)"
-                  htmlFor="purchase-coupon"
-                >
+                <EventField label="Código do cupom" htmlFor="purchase-coupon">
                   <EventInput
                     id="purchase-coupon"
                     type="text"
-                    inputMode="text"
                     autoCapitalize="characters"
-                    autoComplete="off"
-                    maxLength={8}
-                    pattern="[A-Za-z0-9]{8}"
-                    placeholder="Ex.: AB12CD34"
+                    maxLength={40}
+                    placeholder="Ex.: TESTE010"
                     value={couponCode}
                     disabled={isValidatingCoupon}
                     aria-invalid={Boolean(couponError)}
-                    aria-describedby={
-                      couponError ? 'purchase-coupon-error' : 'purchase-coupon-help'
-                    }
                     onChange={(event) => {
-                      setCouponCode(
-                        event.target.value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase(),
-                      )
+                      setCouponCode(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 40))
                       setValidatedCoupon(null)
                       setCouponError(null)
                       setCouponMessage(null)
-                      setSubmitError(null)
                     }}
                   />
                 </EventField>
-                <button
-                  type="button"
-                  className="compra-evento__coupon-button"
+                <button type="button" className="compra-evento__coupon-button"
                   onClick={() => void applyCoupon()}
-                  disabled={isValidatingCoupon || couponCode.length !== 8}
-                >
+                  disabled={isValidatingCoupon || couponCode.length < 4}>
                   {isValidatingCoupon ? 'Validando...' : 'Aplicar cupom'}
                 </button>
-                <p id="purchase-coupon-help" className="compra-evento__coupon-help">
-                  O desconto é aplicado ao valor dos ingressos; a taxa de serviço não muda.
-                </p>
-                {couponMessage && (
-                  <p className="compra-evento__coupon-success" role="status">{couponMessage}</p>
-                )}
-                {couponError && (
-                  <p id="purchase-coupon-error" className="compra-evento__coupon-error" role="alert">
-                    {couponError}
-                  </p>
-                )}
+                <p className="compra-evento__coupon-help">Desconto sobre os ingressos, sem alterar taxas. O valor final será validado pelo servidor.</p>
+                {couponMessage && <p role="status" className="compra-evento__coupon-success">{couponMessage}</p>}
+                {couponError && <p role="alert" className="compra-evento__coupon-error">{couponError}</p>}
               </div>
             </SectionCard>
 
@@ -316,101 +239,18 @@ function CompraEvento() {
               </dl>
             </SectionCard>
 
-            <SectionCard title="3. Forma de pagamento">
-              <fieldset
-                className="compra-evento__payment-methods"
-                aria-describedby="purchase-payment-note"
-              >
-                <legend>Selecione uma modalidade</legend>
-                <label className={paymentMethod === 'credit' ? 'is-selected' : undefined}>
-                  <input
-                    type="radio"
-                    name="purchase-payment-method"
-                    value="credit"
-                    checked={paymentMethod === 'credit'}
-                    onChange={() => setPaymentMethod('credit')}
-                  />
-                  <span>Cartão de crédito</span>
-                </label>
-                <label className={paymentMethod === 'debit' ? 'is-selected' : undefined}>
-                  <input
-                    type="radio"
-                    name="purchase-payment-method"
-                    value="debit"
-                    checked={paymentMethod === 'debit'}
-                    onChange={() => setPaymentMethod('debit')}
-                  />
-                  <span>Cartão de débito</span>
-                </label>
-              </fieldset>
-              <div className="compra-evento__payment">
-                <div className="compra-evento__fields compra-evento__fields--card">
-                  <EventField
-                    label="Número do Cartão"
-                    htmlFor="purchase-card-number"
-                    className="compra-evento__field-wide"
-                  >
-                    <EventInput
-                      id="purchase-card-number"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="off"
-                      maxLength={23}
-                      placeholder="•••• •••• •••• ••••"
-                      value={cardNumber}
-                      onChange={(event) => {
-                        const digits = event.target.value.replace(/\D/g, '').slice(0, 19)
-                        setCardNumber(digits.replace(/(\d{4})(?=\d)/g, '$1 '))
-                      }}
-                    />
-                  </EventField>
-                  <EventField label="Validade" htmlFor="purchase-card-expiry">
-                    <EventInput
-                      id="purchase-card-expiry"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="off"
-                      maxLength={5}
-                      placeholder="MM/AA"
-                      value={cardExpiry}
-                      onChange={(event) => {
-                        const digits = event.target.value.replace(/\D/g, '').slice(0, 4)
-                        setCardExpiry(
-                          digits.length > 2
-                            ? `${digits.slice(0, 2)}/${digits.slice(2)}`
-                            : digits,
-                        )
-                      }}
-                    />
-                  </EventField>
-                  <EventField label="CVV" htmlFor="purchase-card-cvv">
-                    <EventInput
-                      id="purchase-card-cvv"
-                      type="password"
-                      inputMode="numeric"
-                      autoComplete="off"
-                      maxLength={cardBrand === 'American Express' ? 4 : 3}
-                      placeholder="•••"
-                      value={cardCvv}
-                      onChange={(event) => {
-                        const maxLength = cardBrand === 'American Express' ? 4 : 3
-                        setCardCvv(event.target.value.replace(/\D/g, '').slice(0, maxLength))
-                      }}
-                    />
-                  </EventField>
-                </div>
-                <PaymentCard brand={cardBrand} number={maskedCardNumber} />
-              </div>
-              <p id="purchase-payment-note" className="compra-evento__payment-note">
-                Prévia visual: os dados do cartão não são enviados nem armazenados. A reserva
-                continua sem cobrança online.
+            <SectionCard title="3. Confirmação dos ingressos">
+              <p className="compra-evento__payment-note">
+                {apenasGratuitos
+                  ? 'Os ingressos gratuitos são emitidos sem pagamento. Após reservar, confirme a emissão no comprovante.'
+                  : <>Depois de reservar, clique em <strong>Pagar com Stripe</strong> no comprovante. Os dados de pagamento serão informados somente na Stripe.</>}
               </p>
             </SectionCard>
 
             <SectionCard title="Condições da reserva">
               <p className="compra-evento__reservation-note">
-                A reserva retém os ingressos por 10 minutos. Não há pagamento online nesta etapa;
-                reservas expiradas liberam o estoque automaticamente.
+                A reserva inicial retém os ingressos por 10 minutos. Inicie o Checkout
+                antes de ela vencer. O valor final será calculado pelo servidor.
               </p>
             </SectionCard>
           </div>
@@ -430,7 +270,7 @@ function CompraEvento() {
               ctaHref={routeHref('compra', { eventoId: eventId, sessaoId: sessionId })}
               ctaDisabled={isSubmitting || selectedTickets.length === 0}
               onCtaClick={() => void reserve()}
-              note="Sem cobrança agora. A reserva expira em 10 minutos."
+              note={apenasGratuitos ? "Reserve e emita os ingressos gratuitamente. Prazo inicial: 10 minutos." : "Reserve agora e pague pela Stripe em seguida. Prazo inicial: 10 minutos."}
             />
           </aside>
         </div>

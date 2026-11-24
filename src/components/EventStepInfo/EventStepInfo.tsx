@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import coverImage from '../../assets/criar-evento/capa-evento-formulario.png'
 import EventPanel from '../EventPanel/EventPanel'
 import EventField from '../EventField/EventField'
 import EventInput from '../EventInput/EventInput'
@@ -24,6 +25,12 @@ function EventStepInfo({ draft, onChange, onNext }: EventStepInfoProps) {
   const [mapAddress, setMapAddress] = useState('')
 
   useEffect(() => {
+    if (!draft.categoryId || draft.categoryName || !categoriesQuery.data) return
+    const category = categoriesQuery.data.find((item) => String(item.id) === draft.categoryId)
+    if (category) onChange({ categoryName: category.nome })
+  }, [categoriesQuery.data, draft.categoryId, draft.categoryName, onChange])
+
+  useEffect(() => {
     const timer = window.setTimeout(() => setMapAddress(draft.address.trim()), 600)
     return () => window.clearTimeout(timer)
   }, [draft.address])
@@ -40,7 +47,7 @@ function EventStepInfo({ draft, onChange, onNext }: EventStepInfoProps) {
   return (
     <EventPanel title="Informações do Evento:" className="event-step-info">
       <div className="event-step-info__form">
-        <EventField label="Nome do Evento" htmlFor="evento-nome">
+        <EventField label="Nome do Evento" requirement="publication" htmlFor="evento-nome">
           <EventInput
             id="evento-nome"
             type="text"
@@ -50,7 +57,7 @@ function EventStepInfo({ draft, onChange, onNext }: EventStepInfoProps) {
           />
         </EventField>
 
-        <EventField label="Categoria" htmlFor="evento-categoria">
+        <EventField label="Categoria" requirement="publication" htmlFor="evento-categoria">
           <EventSelect
             id="evento-categoria"
             value={draft.categoryId}
@@ -103,7 +110,7 @@ function EventStepInfo({ draft, onChange, onNext }: EventStepInfoProps) {
           </p>
         </EventField>
 
-        <EventField label="Descrição" htmlFor="evento-descricao">
+        <EventField label="Descrição" requirement="publication" htmlFor="evento-descricao">
           <EventTextarea
             id="evento-descricao"
             placeholder="Conte um pouco sobre o evento, atrações e o que os participantes podem esperar..."
@@ -115,7 +122,7 @@ function EventStepInfo({ draft, onChange, onNext }: EventStepInfoProps) {
         <EventField label="Data e Hora" htmlFor="evento-inicio">
           <div className="event-step-info__datetime">
             <EventField
-              label="Início"
+              label="Início" requirement="publication"
               htmlFor="evento-inicio"
               variant="muted"
               className="event-step-info__date"
@@ -129,7 +136,7 @@ function EventStepInfo({ draft, onChange, onNext }: EventStepInfoProps) {
                 onChange={(event) => onChange({ startDate: event.target.value })}
               />
             </EventField>
-            <EventField label="Horário" htmlFor="evento-horario" variant="muted">
+            <EventField label="Horário" requirement="publication" htmlFor="evento-horario" variant="muted">
               <EventInput
                 id="evento-horario"
                 type="time"
@@ -140,7 +147,7 @@ function EventStepInfo({ draft, onChange, onNext }: EventStepInfoProps) {
               />
             </EventField>
             <EventField
-              label="Término"
+              label="Término" requirement="publication"
               htmlFor="evento-termino"
               variant="muted"
               className="event-step-info__date"
@@ -155,7 +162,7 @@ function EventStepInfo({ draft, onChange, onNext }: EventStepInfoProps) {
               />
             </EventField>
             <EventField
-              label="Horário do término"
+              label="Horário do término" requirement="publication"
               htmlFor="evento-horario-termino"
               variant="muted"
             >
@@ -171,7 +178,7 @@ function EventStepInfo({ draft, onChange, onNext }: EventStepInfoProps) {
           </div>
         </EventField>
 
-        <EventField label="Local" htmlFor="evento-local">
+        <EventField label="Local" requirement="publication" htmlFor="evento-local">
           <EventInput
             id="evento-local"
             type="text"
@@ -184,30 +191,62 @@ function EventStepInfo({ draft, onChange, onNext }: EventStepInfoProps) {
             onChange={(event) => onChange({ address: event.target.value })}
           />
         </EventField>
+        <EventField label="Cidade" requirement="publication" htmlFor="evento-cidade">
+          <EventInput
+            id="evento-cidade"
+            type="text"
+            placeholder="Ex.: Rio de Janeiro"
+            maxLength={120}
+            required
+            value={draft.city}
+            onChange={(event) => onChange({ city: event.target.value })}
+          />
+        </EventField>
+        <EventField label="UF" requirement="publication" htmlFor="evento-uf">
+          <EventInput
+            id="evento-uf"
+            type="text"
+            placeholder="Ex.: RJ"
+            maxLength={2}
+            required
+            value={draft.state}
+            onChange={(event) => onChange({ state: event.target.value.toUpperCase() })}
+          />
+        </EventField>
+        <p role="note">Você pode salvar um rascunho incompleto. Os campos marcados como "Obrigatório para publicar" precisam estar válidos antes da publicação.</p>
         <EventMapPreview
           label="Pré-visualização do mapa"
           address={mapAddress}
           className="event-step-info__map"
         />
 
-        <EventField label="Imagem do Evento" htmlFor="evento-imagem">
+        <EventField label="Imagem do Evento" requirement="publication" htmlFor="evento-imagem">
           <div className="event-step-info__images">
             <EventUploadDropzone
               id="evento-imagem"
               title="Arraste uma imagem ou clique para fazer upload"
-              hint="Formatos suportados: JPG, PNG, WEBP (Máx. 5MB)"
+              hint="Capa obrigatória para publicar: JPG, PNG ou WEBP (até 5 MB)"
               onFileChange={handleFile}
             />
-            <EventCoverPreview
-              src={draft.coverPreviewUrl}
-              alt="Imagem de capa do evento"
-              label="Imagem de Capa"
-              editLabel="Editar Imagem"
-            />
+            <div>
+              <EventCoverPreview
+                src={draft.coverPreviewUrl}
+                alt="Pré-visualização da capa do evento"
+                label="Imagem de Capa"
+                editLabel="Editar Imagem"
+              />
+              <p className="event-step-info__cover-status" role="status">
+                {draft.coverFile
+                  ? 'Imagem selecionada. Salve o rascunho para armazená-la.'
+                  : draft.coverPreviewUrl !== coverImage
+                    ? 'Imagem de capa já cadastrada.'
+                    : 'A imagem exibida é apenas ilustrativa. Nenhuma capa foi enviada.'}
+              </p>
+            </div>
           </div>
         </EventField>
 
-        <EventField label="Tags" htmlFor="evento-tags">
+        <EventField label="Tags" requirement="optional" htmlFor="evento-tags">
           <EventTagInput
             id="evento-tags"
             tags={draft.tags}

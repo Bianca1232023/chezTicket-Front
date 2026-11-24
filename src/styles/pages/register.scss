@@ -10,6 +10,18 @@
     gap: 5px;
   }
 
+  .auth-account-choice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    border: 1px solid #c6cbd4;
+    border-radius: 8px;
+    padding: 12px;
+
+    legend { font-weight: 600; padding: 0 5px; }
+    label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  }
+
   .terms-row {
     margin: 28px 0 12px;
   }

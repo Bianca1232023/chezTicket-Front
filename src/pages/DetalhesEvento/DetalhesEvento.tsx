@@ -8,6 +8,7 @@ import DetailList from '../../components/DetailList/DetailList'
 import LinkButton from '../../components/LinkButton/LinkButton'
 import { useCategories } from '../../hooks/useCategories'
 import { useEventDetails } from '../../hooks/useEventDetails'
+import { ingressoEmVenda } from '../../utils/ingresso-vendas'
 import { routeHref, useRouteParam } from '../../hooks/useRoute'
 import '../../styles/pages/detalhes-evento.scss'
 
@@ -63,7 +64,8 @@ function DetalhesEvento() {
 
   const { event, sessions } = data
   const category = categoriesQuery.data?.find((item) => item.id === event.categoriaId)
-  const availableSessions = sessions.filter((session) => session.status === 'AGENDADA')
+  const availableSessions = sessions.filter((session) =>
+    session.status === 'AGENDADA' && new Date(session.inicio).getTime() > Date.now())
   const selectedSession =
     availableSessions.find((session) => String(session.id) === selectedSessionId) ??
     availableSessions[0]
@@ -76,7 +78,7 @@ function DetalhesEvento() {
     }
   })
   const availableTickets =
-    selectedSession?.tiposIngresso.filter((ticket) => ticket.quantidadeDisponivel > 0) ?? []
+    selectedSession?.tiposIngresso.filter((ticket) => ingressoEmVenda(ticket)) ?? []
   const minimumPrice = availableTickets.reduce(
     (minimum, ticket) => Math.min(minimum, ticket.gratuito ? 0 : ticket.preco),
     Number.POSITIVE_INFINITY,

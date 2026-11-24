@@ -1,0 +1,79 @@
+chezTicket - Etapa 10C Parte 2
+AJUSTE: mensagens de validacao e indicacao de campos obrigatorios
+===============================================================
+
+O QUE FOI ALTERADO
+------------------
+1) A API POST /api/eventos/{id}/publicacao passa a devolver, SOMENTE
+   para falhas 422 de validacao, JSON com "status" e "message" explicando
+   por que o evento nao pode ser publicado. As respostas 401/403/404/409
+   seguem o tratamento existente; nao ha mudanca nas regras de autorizacao.
+2) Os campos do formulario aparecem identificados como "Obrigatorio para
+   publicar" ou "Opcional". Um rascunho ainda pode ser salvo incompleto.
+3) A imagem demonstrativa do formulario e identificada explicitamente como
+   ilustrativa, sem dar a impressao de que houve upload de capa.
+4) A aba Revisao lista os requisitos basicos pendentes e inclui botoes
+   "Corrigir em Informacoes" ou "Corrigir em Ingressos". A tentativa de
+   publicar sem resolver pendencias detectaveis e bloqueada no frontend,
+   com aviso claro. O backend continua sendo a validacao definitiva.
+5) As outras operacoes (salvar rascunho, editar, pagamentos, cupons,
+   privacidade, bilhetes) nao foram alteradas.
+
+INSTALACAO LOCAL (Windows / PowerShell)
+--------------------------------------
+1) Faca backup dos arquivos locais, caso tenha feito edicoes proprias neles.
+2) Baixe este ZIP na pasta Downloads.
+3) Abra o terminal na pasta raiz do frontend chezTicket-Front, onde existe
+   package.json e a subpasta chezTicket.
+4) Execute:
+
+Expand-Archive -LiteralPath "$env:USERPROFILE\Downloads\AJUSTE-ETAPA-10C2-MENSAGENS-OBRIGATORIOS.zip" -DestinationPath . -Force
+
+5) Na mesma pasta raiz, execute:
+
+npm run build
+
+6) Para reconstruir apenas o backend, execute:
+
+cd chezTicket
+docker compose up -d --build backend
+
+   Nao execute 'docker compose down -v' (remove volumes/dados).
+   Depois volte ao navegador e atualize a pagina (Ctrl + F5).
+
+TESTE RECOMENDADO (SEM CRIAR NOVO EVENTO)
+----------------------------------------
+- Entre com o organizador original no rascunho 'Teste Bloqueio Sem Capa 10C',
+  criado para o teste anterior. Nao edite os eventos publicados.
+- Na aba Informacoes: confira 'Obrigatorio para publicar' junto a 'Imagem do
+  Evento' e a frase de que a capa mostrada e apenas ilustrativa.
+- Na aba Revisao: confira 'O que falta para publicar?' e a pendencia da capa.
+- Clique em 'Publicar': deve aparecer explicacao e o evento nao deve ser
+  publicado. Nenhuma nova requisicao de publicacao 422 e necessaria: agora
+  o frontend consegue identificar esta pendencia antes de chamar a API.
+- Clique em 'Corrigir em Informacoes': deve voltar a primeira etapa.
+- Confirme que 'Salvar alteracoes' continua funcionando para rascunhos.
+- Teste de backend 422: para erros de validacao nao cobertos pelo preflight
+  visual, a aba Network/Response deve conter 'message' com o motivo.
+
+ARQUIVOS DO AJUSTE
+------------------
+chezTicket/backend/src/main/java/com/chezticket/catalogo/evento/adapter/in/web/EventoController.java
+src/components/EventField/EventField.tsx
+src/components/EventField/EventField.scss
+src/components/EventStepInfo/EventStepInfo.tsx
+src/components/EventStepInfo/EventStepInfo.scss
+src/components/EventStepTickets/EventStepTickets.tsx
+src/components/EventStepPromotion/EventStepPromotion.tsx
+src/components/EventStepReview/EventStepReview.tsx
+src/components/EventStepReview/EventStepReview.scss
+src/pages/CriarEvento/CriarEvento.tsx
+src/utils/publication-validation.ts
+
+VERIFICACOES
+------------
+- TypeScript: OK (tsc -b executado).
+- Build do Vite: NAO CONCLUIDO neste ambiente por ausencia de bibliotecas
+  nativas opcionais do Rolldown/Vite. Verificar no Windows com npm run build.
+- Backend Maven: NAO EXECUTADO neste ambiente. Verificar com o Docker acima.
+- Nao ha migracao SQL nem alteracao de dados.

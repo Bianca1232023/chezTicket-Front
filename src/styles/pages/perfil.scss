@@ -162,3 +162,36 @@
     color: tokens.$bg-secondary;
   }
 }
+
+// Exibe o QR code efetivo, sem misturar com o QR demonstrativo da reserva.
+.perfil__issued-tickets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.perfil__issued-ticket {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid tokens.$border-default;
+  border-radius: 12px;
+  background: tokens.$color-quaternary;
+}
+
+.perfil__issued-ticket h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.perfil__issued-ticket p {
+  margin: 4px 0;
+  font-size: 13px;
+}
+
+.perfil__issued-ticket canvas {
+  max-width: 100%;
+  background: white;
+}

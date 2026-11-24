@@ -1,0 +1,41 @@
+ETAPA 10B — PARTE 3 | IMAGENS, TAGS E REDES SOCIAIS
+
+Este ZIP foi preparado sobre o pacote da Etapa 10B Parte 2. Instale apenas se
+as Etapas 10A, 10B e 10B Parte 2 estiverem aplicadas e funcionando.
+
+Inclui migracao V10. FAÇA BACKUP DO BANCO E DO CODIGO ANTES DE INSTALAR.
+
+Novidades:
+- Imagem de capa e de divulgacao JPG/PNG/WEBP (ate 5 MiB cada) persistidas
+  no MariaDB, sem arquivos sumirem na recriacao do container Docker.
+- Tags (ate 10, maximo 40 caracteres) e URLs HTTPS para redes sociais.
+- Imagens de rascunho so para o organizador autenticado; imagens publicas apenas
+  quando o evento estiver publicado/visivel.
+- GET /api/eventos/{id} devolve imagemDivulgacao, tags e redesSociais;
+  GET /api/eventos/{id}/imagens/capa e /divulgacao entregam os arquivos.
+- Lista de eventos passa a incluir imagemCapa (para cards do React).
+- O evento segue em RASCUNHO; publicacao e edicao na Etapa 10C.
+
+Instalacao (PowerShell, dentro da pasta chezTicket):
+ Expand-Archive -LiteralPath "$env:USERPROFILE\Downloads\chezTicket_etapa10b3_imagens_divulgacao.zip" -DestinationPath (Resolve-Path ..).Path -Force
+ docker compose build backend
+ docker run --rm -v "${PWD}\backend:/workspace" -w /workspace maven:3.9-eclipse-temurin-17 mvn -B test
+ docker compose up -d --force-recreate backend
+ cd ..
+ npm run build
+ npm run dev
+
+Banco:
+ SELECT id, titulo, imagem_capa, status FROM evento ORDER BY id DESC LIMIT 5;
+ SELECT evento_id, tipo, mime, OCTET_LENGTH(conteudo) bytes FROM evento_midia ORDER BY evento_id DESC;
+ SELECT * FROM evento_tag ORDER BY evento_id DESC;
+ SELECT evento_id, rede, url FROM evento_rede_social ORDER BY evento_id DESC;
+
+Teste pelo site: faca login como organizador, crie NOVO rascunho com capa,
+imagem de divulgacao, 1-2 tags, e link HTTPS de uma rede social; pressione
+Salvar Rascunho. Ao abrir /api/eventos/{id}, veja metadados; imagens pelo
+caminho /api/eventos/{id}/imagens/capa com login. Janela anonima deve 404
+para imagens de rascunho. Nao publique por SQL.
+
+Seguranca: nao envie .env, chaves Stripe ou Brevo. Antes de producao, revisaremos
+quota de midias, formatos, validacao de imagem e limites de armazenamento.

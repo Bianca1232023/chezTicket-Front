@@ -1,0 +1,52 @@
+ETAPA 6 - CUPONS COM DESCONTO REAL NA STRIPE
+============================================
+
+Base: ZIP original do chezTicket + atualizacoes das Etapas 1 a 5.
+Requer a correção manual anterior de consultarCheckout() em StripeCheckoutService.java.
+Nao inclui StripeCheckoutService.java para preservar essa correção.
+Nao inclui chaves, .env, arquivos SQL ou credenciais.
+
+ARQUIVOS: 11 (2 novos: CupomController e CupomService; 9 modificados).
+
+REGRA:
+- Cupom global, sem restricao por evento (tabela atual nao tem evento_id).
+- Tipos: PERCENTUAL e VALOR_FIXO.
+- Desconto sobre subtotal de ingressos, NAO sobre taxas.
+- O frontend mostra uma estimativa; o backend valida codigo e calcula o valor final.
+- A tabela cupom.usos conta pagamentos confirmados + utilizações temporariamente
+  reservadas em pedidos pendentes. A reserva do cupom acontece ao preparar
+  o pedido, com transacao e lock de linha no MariaDB.
+- Checkout expirado e nao pago devolve a utilizacao do cupom.
+- Ao confirmar pagamento, a utilizacao passa a definitiva, sem incrementar novamente.
+- limite_usos=0 significa ilimitado nesta implementacao.
+- Cupom que zerar totalmente a cobranca sem taxas exige o fluxo gratuito
+  (a implementar na Etapa 7); esse checkout e recusado.
+
+INSTALACAO:
+1) FAZER BACKUP LOCAL antes de aplicar, incluindo fonte Java/React.
+2) No PowerShell em ...\chezTicket-Front\chezTicket:
+   Expand-Archive -LiteralPath "$env:USERPROFILE\Downloads\chezTicket_etapa6_cupons.zip" -DestinationPath (Resolve-Path ..).Path -Force
+3) docker compose build backend
+4) docker run --rm -v "${PWD}\backend:/workspace" -w /workspace maven:3.9-eclipse-temurin-17 mvn -B test
+5) docker compose up -d --force-recreate backend
+6) cd ..
+   npm run build
+   npm run dev (se ainda nao estiver rodando)
+
+TESTE:
+- Entrar com conta de teste, selecionar 1 ingresso de R$10 com taxa R$0.
+- Aplicar codigo TESTE010 (10%).
+- Criar uma reserva NOVA; abrir comprovante e Pagar com Stripe.
+- Conferir que Checkout mostra R$9,00 NO MODO DE TESTE.
+- Conferir no Adminer que pedido.valor_total=9.00 e pedido.cupom_id nao nulo.
+- O uso do cupom sera 1 ENQUANTO o pedido estiver pendente e continuara 1
+  apos confirmado. Se checkout expirar nao pago e for conciliado, voltara a 0.
+- Nao reenviar a mesma reserva com cupom diferente; criar uma nova reserva.
+
+AVISOS:
+- Um checkout abandonado cujo pedido esteja PENDENTE sem session_id ainda
+  precisa de recuperacao automatica; nao liberar estoque manualmente.
+- Cupons/eventos de organizadores ainda precisam de autorizacao e gestao no backend.
+- Nao ativar pagamentos reais nesta etapa.
+- O codigo Java precisa ser compilado e validado no seu computador;
+  o frontend passou na validacao estatica TypeScript neste ambiente.

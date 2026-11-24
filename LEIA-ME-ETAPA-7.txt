@@ -1,0 +1,55 @@
+ETAPA 7 — INGRESSOS GRATUITOS (somente tipos inteiramente gratuitos)
+
+Este patch parte da Etapa 6 instalada e mantem o Checkout Stripe pago intacto.
+Arquivos: 1 classe Java nova + 2 classes Java modificadas + 3 arquivos React modificados.
+
+Fluxo implementado:
+- Selecionar ingressos gratuitos, reservar com sua conta e confirmar em "Emitir ingressos gratuitos".
+- Backend @Transactional valida titular e vencimento da reserva e que TODOS os tipos
+  sejam gratuitos, de preco zero e taxa zero.
+- Emite um pedido CONCLUIDO de valor R$ 0,00, converte reserva e cria QR Codes.
+- NAO cria cobranca Stripe, nem registro de pagamento para ordem gratuita.
+- GET /api/ingressos passa a mostrar pedidos gratuitos sem pagamento, mantendo
+  a exigencia de pagamento APROVADO para ingressos pagos.
+- Nova chamada a /api/checkout/gratuito e autenticada pela configuracao atual.
+- Operacao repetida nao emite ingressos duplicados.
+- Reservas MISTAS (gratis + pago) seguem para o Checkout Stripe, com itens
+  gratuitos no pedido; o fluxo de confirmacao pago emite todos os ingressos.
+- Cupom de 100% de desconto em ingresso PAGO ainda nao equivale a ingresso
+  originalmente gratuito; esse caso continua bloqueado deliberadamente.
+
+INSTALACAO NO POWERSHELL (na pasta chezTicket):
+1. Antes, faca um backup local dos arquivos do projeto.
+2. Expand-Archive -LiteralPath "$env:USERPROFILE\Downloads\chezTicket_etapa7_ingressos_gratuitos.zip" -DestinationPath (Resolve-Path ..).Path -Force
+3. docker compose build backend
+4. docker run --rm -v "${PWD}\backend:/workspace" -w /workspace maven:3.9-eclipse-temurin-17 mvn -B test
+5. docker compose up -d --force-recreate backend
+6. cd ..
+7. npm run build
+8. npm run dev (se ainda nao estiver rodando)
+
+DADOS DE TESTE (somente ambiente local, via Adminer):
+INSERT INTO tipo_ingresso
+(sessao_id,nome,gratuito,preco,taxa_servico,quantidade_total,quantidade_vendida,limite_por_compra,versao)
+SELECT 1,'Cortesia Teste',1,0.00,0.00,10,0,5,0
+WHERE NOT EXISTS
+(SELECT 1 FROM tipo_ingresso WHERE sessao_id=1 AND nome='Cortesia Teste');
+
+Acesse o mesmo evento no React. Selecione 1 Cortesia Teste, crie
+reserva e clique em "Emitir ingressos gratuitos" no comprovante.
+Deve retornar como CONFIRMADO e mostrar o ingresso em Meus ingressos.
+NAO deve criar nova sessao Stripe.
+
+CONSULTA SQL:
+SELECT p.id,p.status,p.valor_total,r.status AS status_reserva,
+(SELECT COUNT(*) FROM ingresso i WHERE i.pedido_id=p.id) AS ingressos_emitidos,
+(SELECT COUNT(*) FROM pagamento pg WHERE pg.pedido_id=p.id) AS pagamentos
+FROM pedido p JOIN reserva r ON r.id=p.reserva_id
+ORDER BY p.id DESC LIMIT 5;
+
+Esperado para o pedido gratuito: CONCLUIDO, 0.00, CONVERTIDA,
+1 ingresso emitido, 0 registros de pagamento.
+
+IMPORTANTE: testar novamente o fluxo pago (sem cupom e com cupom) e o teste de
+concorrencia de confirmacao; esse patch foi revisado estaticamente, nao
+foi executado contra seu MariaDB nem compilado com seu Maven.

@@ -19,13 +19,20 @@ function EventTagInput({
   const [value, setValue] = useState('')
   const classes = ['event-tags', className].filter(Boolean).join(' ')
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const addCurrentTag = () => {
     const tag = value.trim()
+    if (!tag) return
+    if (tag.length > 40 || tags.length >= 10) return
+    if (!tags.some((current) => current.toLocaleLowerCase() === tag.toLocaleLowerCase())) {
+      onTagsChange([...tags, tag])
+    }
+    setValue('')
+  }
 
-    if (event.key === 'Enter') {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' || event.key === ',') {
       event.preventDefault()
-      if (tag && !tags.includes(tag)) onTagsChange([...tags, tag])
-      setValue('')
+      addCurrentTag()
     } else if (event.key === 'Backspace' && !value) {
       onTagsChange(tags.slice(0, -1))
     }
@@ -47,11 +54,18 @@ function EventTagInput({
         id={id}
         className="event-tags__input"
         type="text"
+        maxLength={40}
         value={value}
         placeholder={placeholder}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={handleKeyDown}
+        onBlur={addCurrentTag}
+        aria-describedby={id ? `${id}-ajuda` : undefined}
       />
+      <button className="event-tags__add" type="button" onClick={addCurrentTag}>
+        Adicionar
+      </button>
+      {id && <small id={`${id}-ajuda`} className="event-tags__help">Digite uma tag e pressione Enter ou Adicionar (até 10 tags).</small>}
     </div>
   )
 }

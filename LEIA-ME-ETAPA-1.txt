@@ -1,0 +1,24 @@
+CHEZTICKET — ETAPA 1 (cadastro, login e reservas autenticadas)
+
+Origem: arquivos do ZIP fornecido no chat.
+DESTINO PARA EXTRAIR: C:\Users\marce\audit.io\chezTicket-Front
+
+1) Fazer BACKUP do frontend src e do backend antes de substituir qualquer arquivo.
+2) Extrair este ZIP NA PASTA chezTicket-Front (a pasta que contem src, package.json e a subpasta chezTicket), permitindo substituir os arquivos com mesmo nome.
+3) Nao extrair na pasta chezTicket: o nivel certo e chezTicket-Front.
+4) Nao altera o .env, banco, migracoes ou codigo Stripe.
+5) Rodar em PowerShell (dentro de chezTicket):
+   docker compose build backend
+   docker run --rm -v "${PWD}\backend:/workspace" -w /workspace maven:3.9-eclipse-temurin-17 mvn -B test
+   docker compose up -d --force-recreate backend
+   curl.exe http://localhost:8081/actuator/health
+6) Rodar no frontend (dentro de chezTicket-Front):
+   npm run build
+7) Abrir o site e cadastrar NOVA conta (nao utilizar senhas demonstrativas de seed). Login deve persistir ao recarregar.
+8) A tela Perfil ainda dara 404: GET /api/perfil sera implementado na etapa seguinte.
+9) O controlador de reservas agora exige sessao autenticada e usa o ID do comprador na sessao; sem login retorna 401/403.
+10) Rotas de escrita no catalogo e a rota /api/stripe/teste ficam bloqueadas ate implementacao de papeis. Stripe webhook continua permitido e autenticado pela assinatura Stripe.
+11) NAO usar em producao sem testes de seguranca e confiabilidade do fluxo completo.
+
+Arquivos modificados: backend/pom.xml, DTO e controller de reservas, frontend http-client.ts.
+Arquivos novos: backend/.../auth/SecurityConfig.java, AuthController.java, AuthService.java.

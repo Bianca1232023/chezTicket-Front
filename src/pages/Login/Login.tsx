@@ -11,6 +11,7 @@ import '../../styles/pages/login.scss'
 
 type LoginProps = {
   onNavigateToRegister: () => void
+  onSuccess?: () => void
 }
 
 const REMEMBERED_EMAIL_KEY = 'chezticket.rememberedEmail'
@@ -44,7 +45,7 @@ function saveRememberedEmail(email: string, shouldRemember: boolean) {
   )
 }
 
-function Login({ onNavigateToRegister }: LoginProps) {
+function Login({ onNavigateToRegister, onSuccess }: LoginProps) {
   const { login } = useAuth()
   const [initialEmail] = useState(readRememberedEmail)
   const [email, setEmail] = useState(initialEmail)
@@ -62,7 +63,8 @@ function Login({ onNavigateToRegister }: LoginProps) {
       const shouldRememberEmail = form.get('remember-me') === 'on'
       saveRememberedEmail(emailValue, shouldRememberEmail)
       await login(emailValue, String(form.get('login-password')))
-      navigate('home')
+      if (onSuccess) onSuccess()
+      else navigate('home')
     } catch (reason) {
       setError(
         reason instanceof ApiError && reason.status === 401
