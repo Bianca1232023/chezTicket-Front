@@ -9,6 +9,9 @@ export const pedidoService = {
       codigoCupom: codigoCupom ?? null,
     }),
 
+  listar: (signal?: AbortSignal) =>
+    apiGet<ApiPedido[]>('/pedidos', { signal }),
+
   buscarPorId: (id: number, signal?: AbortSignal) =>
     apiGet<ApiPedido>(`/pedidos/${id}`, { signal }),
 

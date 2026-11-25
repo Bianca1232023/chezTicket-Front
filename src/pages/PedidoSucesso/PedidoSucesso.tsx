@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { QRCodeCanvas } from 'qrcode.react'
 import Header from '../../components/Header/Header'
 import Footer from '../../components/Footer/Footer'
 import Icon from '../../components/Icon/Icon'
@@ -8,8 +7,8 @@ import ButtonLink from '../../components/ButtonLink/ButtonLink'
 import PageTitle from '../../components/PageTitle/PageTitle'
 import StatusBadge from '../../components/StatusBadge/StatusBadge'
 import SectionCard from '../../components/SectionCard/SectionCard'
-import CopyField from '../../components/CopyField/CopyField'
 import LabeledValue from '../../components/LabeledValue/LabeledValue'
+import TicketQrCard from '../../components/TicketQrCard/TicketQrCard'
 import { routeHref, useRouteParam } from '../../hooks/useRoute'
 import { pedidoService } from '../../services/api/pedido-service'
 import { ticketTypeService } from '../../services/api/ticket-type-service'
@@ -172,16 +171,12 @@ function PedidoSucesso() {
                     ) : (
                       <div className="pedido-sucesso__tickets">
                         {ingressos.map((ingresso) => (
-                          <div key={ingresso.id} className="pedido-sucesso__ticket">
-                            <QRCodeCanvas value={ingresso.codigoQr} size={160} level="M" includeMargin />
-                            <p className="pedido-sucesso__ticket-name">
-                              {ticketNames[ingresso.tipoIngressoId] ?? `Ingresso #${ingresso.tipoIngressoId}`}
-                            </p>
-                            <CopyField label="Código do ingresso" value={ingresso.codigoQr} />
-                            <StatusBadge variant={ingresso.status === 'CANCELADO' ? 'danger' : 'success'}>
-                              {ingresso.status}
-                            </StatusBadge>
-                          </div>
+                          <TicketQrCard
+                            key={ingresso.id}
+                            codigoQr={ingresso.codigoQr}
+                            nome={ticketNames[ingresso.tipoIngressoId] ?? `Ingresso #${ingresso.tipoIngressoId}`}
+                            status={ingresso.status}
+                          />
                         ))}
                       </div>
                     )}

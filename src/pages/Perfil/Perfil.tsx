@@ -9,12 +9,16 @@ import DataTable, {
 } from '../../components/DataTable/DataTable'
 import ButtonLink from '../../components/ButtonLink/ButtonLink'
 import Icon from '../../components/Icon/Icon'
+import StatusBadge from '../../components/StatusBadge/StatusBadge'
+import TicketQrCard from '../../components/TicketQrCard/TicketQrCard'
 import { routeHref, useRouteParam } from '../../hooks/useRoute'
 import { useApiQuery } from '../../hooks/useApiQuery'
 import { useAuth } from '../../context/AuthContext'
 import { eventService } from '../../services/api/event-service'
 import { profileService } from '../../services/api/profile-service'
-import type { ApiProfileReservationItem } from '../../types/api'
+import { pedidoService } from '../../services/api/pedido-service'
+import { ticketTypeService } from '../../services/api/ticket-type-service'
+import type { ApiIngresso, ApiPedido, ApiProfileReservationItem } from '../../types/api'
 import coverTop from '../../assets/perfil/cover-wide.png'
 import coverBase from '../../assets/perfil/cover-bottom.png'
 import coverCompact from '../../assets/perfil/cover-tile.png'
@@ -27,16 +31,6 @@ const tabs: TabItem[] = [
   { id: 'meus-ingressos', label: 'Meus ingressos' },
   { id: 'meus-eventos', label: 'Meus Eventos' },
   { id: 'notas-fiscais', label: 'Notas fiscais' },
-]
-
-const reservationColumns: DataTableColumn[] = [
-  { key: 'event', header: 'Evento', width: '17.7%', align: 'left' },
-  { key: 'date', header: 'Data', width: '20%' },
-  { key: 'location', header: 'Local', width: '20.1%' },
-  { key: 'tickets', header: 'Ingressos reservados', width: '18%' },
-  { key: 'status', header: 'Status', width: '12%' },
-  { key: 'expiry', header: 'Validade', width: '15%' },
-  { key: 'total', header: 'Total estimado', width: '15%', mobileEmphasis: true },
 ]
 
 const invoiceColumns: DataTableColumn[] = [
@@ -113,6 +107,9 @@ const reservationStatus = (reservation: ReservationGroup) => {
   }[reservation.status] ?? reservation.status
 }
 
+const PEDIDOS_COM_INGRESSO = ['CONCLUIDO', 'PAGO', 'REEMBOLSADO']
+const PEDIDOS_STATUS_NEGATIVO = ['REEMBOLSADO', 'RECUSADO', 'EXPIRADO']
+
 function Perfil() {
   const { user } = useAuth()
   const query = useCallback((signal: AbortSignal) => profileService.get(signal), [])
@@ -125,10 +122,56 @@ function Perfil() {
   const [deletingEventId, setDeletingEventId] = useState<number | null>(null)
   const [eventActionError, setEventActionError] = useState<string | null>(null)
   const [eventActionMessage, setEventActionMessage] = useState<string | null>(null)
+  const [pedidos, setPedidos] = useState<ApiPedido[]>([])
+  const [ingressosPorPedido, setIngressosPorPedido] = useState<Record<number, ApiIngresso[]>>({})
+  const [ticketNames, setTicketNames] = useState<Record<number, string>>({})
+  const [isLoadingPedidos, setIsLoadingPedidos] = useState(true)
+  const [pedidosError, setPedidosError] = useState<string | null>(null)
 
   useEffect(() => {
     setActiveTab(tabFromRoute)
   }, [tabFromRoute])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    setIsLoadingPedidos(true)
+    setPedidosError(null)
+
+    pedidoService.listar(controller.signal)
+      .then(async (lista) => {
+        const comIngresso = lista.filter((pedido) => PEDIDOS_COM_INGRESSO.includes(pedido.status))
+        const entradas = await Promise.all(
+          comIngresso.map((pedido) =>
+            pedidoService.listarIngressos(pedido.id, controller.signal)
+              .then((ingressos) => [pedido.id, ingressos] as const),
+          ),
+        )
+        if (controller.signal.aborted) return
+        setIngressosPorPedido(Object.fromEntries(entradas))
+
+        const idsUnicos = Array.from(new Set(lista.flatMap((pedido) => pedido.itens.map((item) => item.tipoIngressoId))))
+        const nomes = await Promise.all(
+          idsUnicos.map((id) =>
+            ticketTypeService.buscarPorId(id, controller.signal)
+              .then((tipo) => [id, tipo.nome] as const)
+              .catch(() => [id, `Ingresso #${id}`] as const),
+          ),
+        )
+        if (!controller.signal.aborted) setTicketNames(Object.fromEntries(nomes))
+
+        if (!controller.signal.aborted) setPedidos(lista)
+      })
+      .catch((reason: unknown) => {
+        if (!controller.signal.aborted) {
+          setPedidosError(reason instanceof Error ? reason.message : 'Não foi possível carregar seus pedidos.')
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoadingPedidos(false)
+      })
+
+    return () => controller.abort()
+  }, [])
 
   const deleteEvent = async (id: number, title: string) => {
     if (!window.confirm(
@@ -155,15 +198,6 @@ function Perfil() {
 
   const reservations = groupReservations(data?.reservas ?? [])
   const currentReservations = reservations.filter(isCurrentReservation)
-  const reservationRows = reservations.map((reservation) => ({
-    event: reservation.eventTitle,
-    date: formatDate(reservation.startsAt),
-    location: reservation.location ?? 'Não informado',
-    tickets: reservation.tickets.map((ticket) => `${ticket.quantity} × ${ticket.name}`).join(', '),
-    status: reservationStatus(reservation),
-    expiry: formatExpiry(reservation.expiresAt, { dateStyle: 'short', timeStyle: 'short' }),
-    total: formatCurrency(reservation.total),
-  }))
   const invoiceRows = reservations.map((reservation) => ({
     event: reservation.eventTitle,
     date: formatDate(reservation.createdAt, { dateStyle: 'short', timeStyle: 'short' }),
@@ -262,12 +296,40 @@ function Perfil() {
               </section>
 
               <section className="perfil__section perfil__section--history">
-                <h2 className="perfil__section-title">Histórico de reservas</h2>
-                <DataTable
-                  caption="Reservas de ingressos"
-                  columns={reservationColumns}
-                  rows={reservationRows}
-                />
+                <h2 className="perfil__section-title">Meus pedidos</h2>
+                {isLoadingPedidos ? (
+                  <p role="status">Carregando seus pedidos...</p>
+                ) : pedidosError ? (
+                  <p role="alert">{pedidosError}</p>
+                ) : pedidos.length === 0 ? (
+                  <p role="status">Você ainda não fez nenhum pedido.</p>
+                ) : (
+                  <div className="perfil__orders">
+                    {pedidos.map((pedido) => (
+                      <div key={pedido.id} className="perfil__order">
+                        <div className="perfil__order-head">
+                          <span className="perfil__order-id">Pedido #{pedido.id}</span>
+                          <StatusBadge variant={PEDIDOS_STATUS_NEGATIVO.includes(pedido.status) ? 'danger' : 'success'}>
+                            {pedido.status}
+                          </StatusBadge>
+                          <span className="perfil__order-total">{formatCurrency(pedido.valorTotal)}</span>
+                        </div>
+                        {(ingressosPorPedido[pedido.id] ?? []).length > 0 && (
+                          <div className="perfil__order-tickets">
+                            {ingressosPorPedido[pedido.id].map((ingresso) => (
+                              <TicketQrCard
+                                key={ingresso.id}
+                                codigoQr={ingresso.codigoQr}
+                                nome={ticketNames[ingresso.tipoIngressoId] ?? `Ingresso #${ingresso.tipoIngressoId}`}
+                                status={ingresso.status}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </section>
             </>
           ) : data && activeTab === 'notas-fiscais' ? (

@@ -58,6 +58,41 @@
   padding: 0 5px;
 }
 
+.perfil__orders {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.perfil__order {
+  padding: 16px;
+  border: 1px solid tokens.$border-default;
+  border-radius: 12px;
+}
+
+.perfil__order-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.perfil__order-id {
+  font-weight: 600;
+}
+
+.perfil__order-total {
+  margin-left: auto;
+  font-weight: 600;
+}
+
+.perfil__order-tickets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
 .perfil__empty-events {
   display: flex;
   min-height: 260px;

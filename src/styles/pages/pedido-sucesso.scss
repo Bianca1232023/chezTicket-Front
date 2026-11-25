@@ -32,22 +32,6 @@
   margin-top: 8px;
 }
 
-.pedido-sucesso__ticket {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px;
-  border: 1px solid tokens.$border-default;
-  border-radius: 12px;
-  text-align: center;
-}
-
-.pedido-sucesso__ticket-name {
-  margin: 0;
-  font-weight: 600;
-}
-
 .pedido-sucesso__refund-error {
   margin: 8px 0 0;
   color: tokens.$feedback-danger;
